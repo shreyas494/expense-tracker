@@ -11,7 +11,7 @@ import challengeRouter from './routes/challengeRoute.js';
 
     
 const app=express()
-const port=4000
+const port = process.env.PORT || 4000;
 
 //MIDDLEWARE
 app.use(cors())
