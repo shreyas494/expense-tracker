@@ -9,7 +9,7 @@ import { LogOut } from 'lucide-react';
 import axios from 'axios';
 
 
-const BASE_URL = 'http://localhost:4000/api'
+const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
 const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const navigate = useNavigate();

@@ -4,7 +4,7 @@ import { User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 
-const Register = ({ onRegister, API_URL = "http://localhost:4000" }) => {
+const Register = ({ onRegister, API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000" }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

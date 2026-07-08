@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { challengeStyles } from '../assets/dummyStyles'
 
-const BASE_URL = 'http://localhost:4000/api/challenges'
+const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/challenges`
 
 const CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Entertainment', 'Utilities', 'Healthcare', 'Other']
 

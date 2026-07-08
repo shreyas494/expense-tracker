@@ -30,7 +30,7 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token")
-      const res = await axios.put('http://localhost:4000/api/user/profile', 
+      const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/user/profile`, 
         { name, email },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -65,7 +65,7 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token")
-      await axios.put('http://localhost:4000/api/user/password', 
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/user/password`, 
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       )

@@ -113,7 +113,7 @@ const ExpensePage = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token")
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      const res = await axios.get(`http://localhost:4000/api/expense/downloadexcel`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/expense/downloadexcel`, {
         headers,
         responseType: 'blob'
       })

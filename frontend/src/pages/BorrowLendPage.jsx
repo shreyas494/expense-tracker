@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { borrowLendStyles, cn } from '../assets/dummyStyles'
 
-const BASE_URL = 'http://localhost:4000/api/borrow-lend'
+const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/borrow-lend`
 
 const BorrowLendPage = () => {
   const { onLogout, refreshTransactions } = useOutletContext()
