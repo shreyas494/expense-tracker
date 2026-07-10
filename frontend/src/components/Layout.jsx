@@ -6,6 +6,9 @@ import { useState } from 'react'
 import { Activity, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, IndianRupee, Gift, Home, Info, PieChart, PiggyBank, RefreshCcw, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap, Search } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 import axios from 'axios'
+import SmsPromptModal from './SmsPromptModal'
+import { AnimatePresence } from 'framer-motion'
+
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 const CATEGORY_ICONS = {
@@ -76,6 +79,30 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); 
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingNotes, setPendingNotes] = useState([]);
+
+  // Fetch transactions needing notes/category updates
+  const fetchPendingNotes = async () => {
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) return;
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(`${API_BASE}/expense/pending-notes`, { headers });
+      if (res.data.success && res.data.data) {
+        setPendingNotes(res.data.data);
+      }
+    } catch (err) {
+      console.error("fetchPendingNotes error:", err);
+    }
+  };
+
+  // Poll for new SMS transactions every 10 seconds
+  useEffect(() => {
+    fetchPendingNotes();
+    const interval = setInterval(fetchPendingNotes, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   // to fetch transactions from server side
    const fetchTransactions = async () => {
@@ -642,6 +669,21 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
       </div>
     </div>
 
+    <AnimatePresence>
+      {pendingNotes.length > 0 && (
+        <SmsPromptModal
+          transaction={pendingNotes[0]}
+          onClose={() => {
+            // Remove current transaction from the queue (skip/dismiss)
+            setPendingNotes(prev => prev.slice(1));
+          }}
+          onSaved={async () => {
+            await fetchTransactions();
+            await fetchPendingNotes();
+          }}
+        />
+      )}
+    </AnimatePresence>
     </div>
 
 

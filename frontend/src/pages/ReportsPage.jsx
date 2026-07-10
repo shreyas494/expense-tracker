@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, FileSpreadsheet, Download, Calendar, ArrowUpRight, ArrowDownRight, PiggyBank, RefreshCw, CheckCircle } from 'lucide-react'
+import { FileText, FileSpreadsheet, Download, Calendar, ArrowUpRight, ArrowDownRight, PiggyBank, RefreshCw, CheckCircle, Smartphone, Copy } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
 const ReportsPage = () => {
-  const { transactions, onLogout } = useOutletContext()
+  const { transactions, onLogout, user } = useOutletContext()
+  const [copied, setCopied] = useState(false)
+
   const [timeframe, setTimeframe] = useState("monthly")
   const [format, setFormat] = useState("pdf")
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -241,7 +243,52 @@ const ReportsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Automate SMS Tracking Card */}
+          <div className="bg-white dark:bg-slate-900 shadow-sm border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+              <Smartphone className="w-5 h-5 text-teal-600" />
+              3. Automate Phone UPI / PhonePe Tracking
+            </h2>
+            <p className="text-sm text-gray-500 mb-4 font-medium">
+              Copy your personal webhook URL and use it in your phone's SMS Forwarder app to automatically capture and log transactions.
+            </p>
+
+            <div className="flex flex-col gap-2 p-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-xl mb-4">
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Your Webhook URL</span>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  readOnly
+                  value={user ? `${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user._id}` : "Loading..."}
+                  className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-950 text-gray-800 dark:text-gray-200 font-mono focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    if (user) {
+                      navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user._id}`);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 3000);
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500 font-medium space-y-2">
+              <p className="font-bold text-gray-700 dark:text-gray-300">Quick Configuration:</p>
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>Open the **SMS Forwarder** app on your phone.</li>
+                <li>Add a forwarding rule with triggers set to incoming bank SMS (e.g. from HDFC, SBI, AXIS).</li>
+                <li>Set target to **Webhook (HTTP POST)** and paste your Webhook URL above.</li>
+              </ol>
+            </div>
+          </div>
         </div>
+
 
         {/* Right Column: Statement Preview & Trigger */}
         <div className="space-y-6">
