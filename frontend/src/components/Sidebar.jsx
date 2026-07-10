@@ -12,7 +12,8 @@ import { HandCoins } from 'lucide-react';
 import { useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 import { LogOut } from 'lucide-react';
-import { Menu,X, Trophy } from 'lucide-react';
+import { Menu,X, Trophy, FileText } from 'lucide-react';
+
 
 
 
@@ -23,8 +24,10 @@ const MENU_ITEMS = [
   { text: "Expenses", path: "/expense", icon: <ArrowDown size={20} /> },
   { text: "Borrow & Lend", path: "/borrow-lend", icon: <HandCoins size={20} /> },
   { text: "Savings Challenges", path: "/challenges", icon: <Trophy size={20} /> },
+  { text: "Reports", path: "/reports", icon: <FileText size={20} /> },
   { text: "Profile", path: "/profile", icon: <User size={20} /> },
 ];
+
 
 
 const Sidebar = ({ user, isCollapsed, setIsCollapsed }) => {

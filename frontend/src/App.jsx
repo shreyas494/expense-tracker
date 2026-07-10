@@ -7,7 +7,9 @@ import ExpensePage from './pages/ExpensePage'
 import ProfilePage from './pages/ProfilePage'
 import BorrowLendPage from './pages/BorrowLendPage'
 import ChallengesPage from './pages/ChallengesPage'
+import ReportsPage from './pages/ReportsPage'
 import { useNavigate } from 'react-router-dom'
+
 import Login from './components/Login'
 import Register from './components/Register'
 
@@ -105,7 +107,9 @@ const App = () => {
           <Route path="/expense" element={<ExpensePage/>} />
           <Route path="/borrow-lend" element={<BorrowLendPage/>} />
           <Route path="/challenges" element={<ChallengesPage/>} />
+          <Route path="/reports" element={<ReportsPage/>} />
           <Route path="/profile" element={<ProfilePage/>} />
+
       </Route>
     </Routes>
     </>
