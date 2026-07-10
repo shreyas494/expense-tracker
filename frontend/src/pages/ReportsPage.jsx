@@ -23,6 +23,14 @@ const ReportsPage = () => {
   const [exportSuccess, setExportSuccess] = useState(false)
   const [borrowLendSummary, setBorrowLendSummary] = useState({ totalBorrowed: 0, totalLent: 0 })
 
+  const webhookUrl = useMemo(() => {
+    if (!user) return ""
+    const apiBase = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.host}`
+    const base = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`
+    return `${base}/expense/sms-webhook?userId=${user.id || user._id}`
+  }, [user])
+
+
   // Synchronize date format when timeframe changes
   useEffect(() => {
     const today = new Date()
@@ -260,13 +268,13 @@ const ReportsPage = () => {
                 <input
                   type="text"
                   readOnly
-                  value={user ? `${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user.id || user._id}` : "Loading..."}
+                  value={user ? webhookUrl : "Loading..."}
                   className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-950 text-gray-800 dark:text-gray-200 font-mono focus:outline-none"
                 />
                 <button
                   onClick={() => {
                     if (user) {
-                      navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user.id || user._id}`);
+                      navigator.clipboard.writeText(webhookUrl);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 3000);
                     }
