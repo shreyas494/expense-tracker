@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import incomeModel from "../models/incomeModel.js";
 import expenseModel from "../models/expenseModel.js";
 import borrowLendModel from "../models/borrowLendModel.js";
@@ -49,12 +49,12 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
 
   doc.pipe(res);
 
-  // Styling helper values
-  const primaryColor = "#0f172a";
-  const secondaryColor = "#4f46e5";
-  const textColor = "#1e293b";
-  const mutedTextColor = "#64748b";
-  const gridBorderColor = "#e2e8f0";
+  // Consistent branding colors matching the project: Teal, Cyan, Orange/Rose
+  const primaryColor = "#0d9488"; // Teal 600
+  const secondaryColor = "#0891b2"; // Cyan 600
+  const textColor = "#1e293b"; // Slate 800
+  const mutedTextColor = "#64748b"; // Slate 500
+  const gridBorderColor = "#e2e8f0"; // Slate 200
 
   // --- HEADER ---
   doc.fillColor(primaryColor).font("Helvetica-Bold").fontSize(26);
@@ -92,21 +92,21 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
   });
 
   // Render Metric Blocks (3 columns)
-  // Box 1: Total Income
-  doc.fillColor("#f0fdf4");
+  // Box 1: Total Income (Teal styling)
+  doc.fillColor("#f0fdfa"); // light teal
   doc.rect(50, 165, 155, 60).fill();
-  doc.fillColor("#16a34a").font("Helvetica-Bold").fontSize(10).text("TOTAL INCOME", 60, 175);
+  doc.fillColor("#0d9488").font("Helvetica-Bold").fontSize(10).text("TOTAL INCOME", 60, 175);
   doc.fontSize(16).text(`₹${totalIncome.toFixed(2)}`, 60, 195);
 
-  // Box 2: Total Expenses
-  doc.fillColor("#fef2f2");
+  // Box 2: Total Expenses (Orange styling)
+  doc.fillColor("#fff7ed"); // light orange
   doc.rect(215, 165, 155, 60).fill();
-  doc.fillColor("#dc2626").font("Helvetica-Bold").fontSize(10).text("TOTAL EXPENSES", 225, 175);
+  doc.fillColor("#ea580c").font("Helvetica-Bold").fontSize(10).text("TOTAL EXPENSES", 225, 175);
   doc.fontSize(16).text(`₹${totalExpense.toFixed(2)}`, 225, 195);
 
-  // Box 3: Net Savings
-  const savingsColor = savings >= 0 ? "#16a34a" : "#dc2626";
-  doc.fillColor(savings >= 0 ? "#f0fdf4" : "#fef2f2");
+  // Box 3: Net Savings (Cyan or Red styling)
+  const savingsColor = savings >= 0 ? "#0891b2" : "#dc2626";
+  doc.fillColor(savings >= 0 ? "#ecfeff" : "#fef2f2"); // light cyan or light red
   doc.rect(380, 165, 165, 60).fill();
   doc.fillColor(savingsColor).font("Helvetica-Bold").fontSize(10).text("NET SAVINGS", 390, 175);
   doc.fontSize(16).text(`₹${savings.toFixed(2)}`, 390, 195);
@@ -124,7 +124,7 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
     doc.fillColor(primaryColor).font("Helvetica-Bold").fontSize(14).text(title, 50, startY);
     let y = startY + 20;
 
-    // Header Background
+    // Header Background: Primary Teal color with White text
     doc.fillColor(primaryColor).rect(50, y, 495, 20).fill();
     doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(9);
 
@@ -155,13 +155,13 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
       row.forEach((cell, cellIndex) => {
         // Alignment & color formatting for currencies or special flags
         if (headers[cellIndex] === "Amount" || headers[cellIndex] === "Repaid" || headers[cellIndex] === "Remaining") {
-          if (cell.startsWith("+")) doc.fillColor("#16a34a");
-          else if (cell.startsWith("-")) doc.fillColor("#dc2626");
+          if (cell.startsWith("+")) doc.fillColor("#0d9488"); // Teal
+          else if (cell.startsWith("-")) doc.fillColor("#ea580c"); // Orange
           else doc.fillColor(textColor);
         } else if (headers[cellIndex] === "Status") {
-          if (cell === "settled" || cell === "completed") doc.fillColor("#16a34a");
-          else if (cell === "failed") doc.fillColor("#dc2626");
-          else doc.fillColor("#d97706"); // pending/active: orange
+          if (cell === "settled" || cell === "completed") doc.fillColor("#0d9488"); // Teal
+          else if (cell === "failed") doc.fillColor("#dc2626"); // Red
+          else doc.fillColor("#ea580c"); // Orange
         } else {
           doc.fillColor(textColor);
         }
@@ -244,7 +244,6 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
   currentY = drawTable(doc, currentY, "Savings Challenges", challengeHeaders, challengeRows, challengeWidths);
 
   // --- FOOTER AND PAGE NUMBERS ---
-  // PDFKit bufferPages dynamic rendering
   const range = doc.bufferedPageRange();
   for (let i = 0; i < range.count; i++) {
     doc.switchToPage(i);
@@ -261,11 +260,45 @@ function generatePdfReport(res, user, timeframe, dateRangeStr, data) {
 }
 
 // Generate Excel Report
-function generateExcelReport(res, timeframe, dateRangeStr, data) {
+async function generateExcelReport(res, timeframe, dateRangeStr, data) {
   const { incomes, expenses, borrowLends, challenges } = data;
-  const workbook = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "TrackExpense";
+  workbook.created = new Date();
+
+  // Helper to format worksheet headers
+  function formatSheetHeaders(sheet, columns) {
+    sheet.columns = columns;
+    const headerRow = sheet.getRow(1);
+    headerRow.height = 25;
+    headerRow.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+    
+    // Teal background for headers matching the theme
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0D9488" }
+    };
+    
+    headerRow.alignment = { vertical: "middle", horizontal: "left" };
+    sheet.views = [{ showGridLines: true }];
+  }
 
   // 1. Sheet: Summary Overview
+  const summarySheet = workbook.addWorksheet("Summary Overview");
+  summarySheet.views = [{ showGridLines: true }];
+
+  summarySheet.getCell("A1").value = "TrackExpense Financial Summary";
+  summarySheet.getCell("A1").font = { name: "Arial", size: 16, bold: true, color: { argb: "FF0D9488" } };
+  summarySheet.mergeCells("A1:C1");
+  summarySheet.getRow(1).height = 30;
+
+  summarySheet.getCell("A2").value = `Period: ${timeframe.toUpperCase()}`;
+  summarySheet.getCell("A2").font = { name: "Arial", size: 10, italic: true };
+  summarySheet.getCell("A3").value = `Date Range: ${dateRangeStr}`;
+  summarySheet.getCell("A3").font = { name: "Arial", size: 10, italic: true };
+
+  // Financial Metrics Table
   const totalIncome = incomes.reduce((sum, i) => sum + Number(i.amount || 0), 0);
   const totalExpense = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const netSavings = totalIncome - totalExpense;
@@ -277,81 +310,132 @@ function generateExcelReport(res, timeframe, dateRangeStr, data) {
     else totalLent += b.remainingAmount;
   });
 
-  const summaryData = [
-    { Metric: "Report Period", Value: timeframe.toUpperCase() },
-    { Metric: "Date Range", Value: dateRangeStr },
-    { Metric: "Generated At", Value: new Date().toLocaleString() },
-    { Metric: "", Value: "" },
-    { Metric: "Financial Totals", Value: "" },
-    { Metric: "Total Income", Value: totalIncome },
-    { Metric: "Total Expenses", Value: totalExpense },
-    { Metric: "Net Savings", Value: netSavings },
-    { Metric: "", Value: "" },
-    { Metric: "Debts & Loans Summary", Value: "" },
-    { Metric: "Total Borrowed Outstanding", Value: totalBorrowed },
-    { Metric: "Total Lent Outstanding", Value: totalLent },
+  const summaryRows = [
+    ["Metric", "Value", "Notes"],
+    ["Total Income", totalIncome, "All earnings in this period"],
+    ["Total Expenses", totalExpense, "All expenditures in this period"],
+    ["Net Savings", netSavings, "Total savings (Income - Expenses)"],
+    ["Total Borrowed (Outstanding)", totalBorrowed, "Money you owe to others"],
+    ["Total Lent (Outstanding)", totalLent, "Money others owe to you"]
   ];
-  const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary Overview");
+
+  summaryRows.forEach((row, i) => {
+    const rowNum = i + 5;
+    summarySheet.getRow(rowNum).values = row;
+    if (i === 0) {
+      const header = summarySheet.getRow(rowNum);
+      header.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+      header.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0D9488" } };
+      header.height = 22;
+    } else {
+      const dataRow = summarySheet.getRow(rowNum);
+      dataRow.getCell(2).numFmt = '"₹"#,##0.00';
+      if (row[0] === "Net Savings") {
+        dataRow.getCell(2).font = { bold: true, color: { argb: netSavings >= 0 ? "FF0D9488" : "FFDC2626" } };
+      }
+    }
+  });
+
+  summarySheet.getColumn(1).width = 30;
+  summarySheet.getColumn(2).width = 18;
+  summarySheet.getColumn(3).width = 35;
 
   // 2. Sheet: Incomes
-  const incomesData = incomes.map(i => ({
-    Date: new Date(i.date).toLocaleDateString(),
-    Category: i.category || "",
-    Description: i.description || "",
-    Amount: Number(i.amount)
-  }));
-  const incomesSheet = XLSX.utils.json_to_sheet(incomesData);
-  XLSX.utils.book_append_sheet(workbook, incomesSheet, "Incomes");
+  const incomesSheet = workbook.addWorksheet("Incomes");
+  formatSheetHeaders(incomesSheet, [
+    { header: "Date", key: "date", width: 15 },
+    { header: "Category", key: "category", width: 18 },
+    { header: "Description", key: "description", width: 35 },
+    { header: "Amount", key: "amount", width: 18, style: { numFmt: '"₹"#,##0.00' } }
+  ]);
+  incomes.forEach(i => {
+    incomesSheet.addRow({
+      date: new Date(i.date).toLocaleDateString(),
+      category: i.category || "",
+      description: i.description || "",
+      amount: Number(i.amount)
+    });
+  });
 
   // 3. Sheet: Expenses
-  const expensesData = expenses.map(e => ({
-    Date: new Date(e.date).toLocaleDateString(),
-    Category: e.category || "",
-    Description: e.description || "",
-    Amount: Number(e.amount)
-  }));
-  const expensesSheet = XLSX.utils.json_to_sheet(expensesData);
-  XLSX.utils.book_append_sheet(workbook, expensesSheet, "Expenses");
+  const expensesSheet = workbook.addWorksheet("Expenses");
+  formatSheetHeaders(expensesSheet, [
+    { header: "Date", key: "date", width: 15 },
+    { header: "Category", key: "category", width: 18 },
+    { header: "Description", key: "description", width: 35 },
+    { header: "Amount", key: "amount", width: 18, style: { numFmt: '"₹"#,##0.00' } }
+  ]);
+  expenses.forEach(e => {
+    expensesSheet.addRow({
+      date: new Date(e.date).toLocaleDateString(),
+      category: e.category || "",
+      description: e.description || "",
+      amount: Number(e.amount)
+    });
+  });
 
   // 4. Sheet: Borrow & Lend
-  const borrowLendData = borrowLends.map(b => ({
-    Date: new Date(b.date).toLocaleDateString(),
-    Type: b.type.toUpperCase(),
-    Person: b.person,
-    Amount: Number(b.amount),
-    "Remaining Amount": Number(b.remainingAmount),
-    "Due Date": b.dueDate ? new Date(b.dueDate).toLocaleDateString() : "",
-    Status: b.status,
-    Description: b.description || ""
-  }));
-  const borrowSheet = XLSX.utils.json_to_sheet(borrowLendData);
-  XLSX.utils.book_append_sheet(workbook, borrowSheet, "Borrow & Lend");
+  const borrowSheet = workbook.addWorksheet("Borrow & Lend");
+  formatSheetHeaders(borrowSheet, [
+    { header: "Date", key: "date", width: 15 },
+    { header: "Type", key: "type", width: 12 },
+    { header: "Person", key: "person", width: 20 },
+    { header: "Total Amount", key: "amount", width: 18, style: { numFmt: '"₹"#,##0.00' } },
+    { header: "Remaining Amount", key: "remainingAmount", width: 18, style: { numFmt: '"₹"#,##0.00' } },
+    { header: "Due Date", key: "dueDate", width: 15 },
+    { header: "Status", key: "status", width: 15 },
+    { header: "Description", key: "description", width: 30 }
+  ]);
+  borrowLends.forEach(b => {
+    borrowSheet.addRow({
+      date: new Date(b.date).toLocaleDateString(),
+      type: b.type.toUpperCase(),
+      person: b.person,
+      amount: Number(b.amount),
+      remainingAmount: Number(b.remainingAmount),
+      dueDate: b.dueDate ? new Date(b.dueDate).toLocaleDateString() : "",
+      status: b.status,
+      description: b.description || ""
+    });
+  });
 
-  // 5. Sheet: Challenges
-  const challengesData = challenges.map(c => ({
-    Title: c.title,
-    Description: c.description || "",
-    Type: c.challengeType,
-    "Target Value": Number(c.targetValue),
-    Progress: c.progress,
-    Streak: `${c.streak} days`,
-    "Max Streak": `${c.maxStreak} days`,
-    Status: c.status,
-    "Start Date": new Date(c.startDate).toLocaleDateString(),
-    "End Date": new Date(c.endDate).toLocaleDateString()
-  }));
-  const challengesSheet = XLSX.utils.json_to_sheet(challengesData);
-  XLSX.utils.book_append_sheet(workbook, challengesSheet, "Savings Challenges");
-
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  // 5. Sheet: Savings Challenges
+  const challengesSheet = workbook.addWorksheet("Savings Challenges");
+  formatSheetHeaders(challengesSheet, [
+    { header: "Title", key: "title", width: 25 },
+    { header: "Description", key: "description", width: 30 },
+    { header: "Type", key: "challengeType", width: 20 },
+    { header: "Target Value", key: "targetValue", width: 18, style: { numFmt: '"₹"#,##0.00' } },
+    { header: "Progress", key: "progress", width: 12 },
+    { header: "Streak", key: "streak", width: 12 },
+    { header: "Max Streak", key: "maxStreak", width: 12 },
+    { header: "Status", key: "status", width: 12 },
+    { header: "Start Date", key: "startDate", width: 15 },
+    { header: "End Date", key: "endDate", width: 15 }
+  ]);
+  challenges.forEach(c => {
+    challengesSheet.addRow({
+      title: c.title,
+      description: c.description || "",
+      challengeType: c.challengeType.replace("_", " ").toUpperCase(),
+      targetValue: Number(c.targetValue),
+      progress: c.progress,
+      streak: `${c.streak} days`,
+      maxStreak: `${c.maxStreak} days`,
+      status: c.status,
+      startDate: new Date(c.startDate).toLocaleDateString(),
+      endDate: new Date(c.endDate).toLocaleDateString()
+    });
+  });
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader(
     "Content-Disposition",
     `attachment; filename="TrackExpense_${timeframe}_Report_${dateRangeStr.replace(/[^a-zA-Z0-9-]/g, "_")}.xlsx"`
   );
-  res.send(buffer);
+
+  await workbook.xlsx.write(res);
+  res.end();
 }
 
 // Controller entry point
@@ -383,7 +467,7 @@ export async function exportReport(req, res) {
     const data = { incomes, expenses, borrowLends, challenges };
 
     if (format === "excel") {
-      generateExcelReport(res, timeframe, dateRangeStr, data);
+      await generateExcelReport(res, timeframe, dateRangeStr, data);
     } else {
       generatePdfReport(res, user, timeframe, dateRangeStr, data);
     }

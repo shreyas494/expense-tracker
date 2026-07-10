@@ -139,15 +139,15 @@ const ReportsPage = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="p-6 max-w-4xl mx-auto space-y-8 min-h-screen text-gray-800 dark:text-gray-100"
+      className="p-6 max-w-4xl mx-auto space-y-8 min-h-screen text-gray-900 dark:text-white"
     >
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-teal-500 to-cyan-600 bg-clip-text text-transparent">
             Financial Reports
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">
             Export well-formatted statements of your financial balances, incomes, expenses, debts, and savings challenges.
           </p>
         </div>
@@ -158,8 +158,8 @@ const ReportsPage = () => {
         <div className="md:col-span-2 space-y-6">
           {/* Timeframe Selector Card */}
           <div className="bg-white dark:bg-slate-900 shadow-sm border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5 text-indigo-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <Calendar className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               1. Choose Report Timeframe
             </h2>
             <div className="flex gap-2 p-1 bg-gray-50 dark:bg-slate-800 rounded-xl mb-4">
@@ -167,9 +167,9 @@ const ReportsPage = () => {
                 <button
                   key={t}
                   onClick={() => setTimeframe(t)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all capitalize ${
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all capitalize cursor-pointer ${
                     timeframe === t
-                      ? "bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                      ? "bg-white dark:bg-slate-950 text-teal-600 dark:text-teal-400 shadow-sm"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
@@ -179,47 +179,47 @@ const ReportsPage = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-300 uppercase tracking-wider">
                 Select Date / Month
               </label>
               <input
                 type={timeframe === "monthly" ? "month" : "date"}
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold"
               />
             </div>
           </div>
 
           {/* Format Selector Card */}
           <div className="bg-white dark:bg-slate-900 shadow-sm border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-indigo-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               2. Select Export Format
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* PDF Selector */}
               <button
                 onClick={() => setFormat("pdf")}
-                className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all ${
+                className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   format === "pdf"
-                    ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 ring-2 ring-indigo-500"
+                    ? "border-teal-500 bg-teal-50/30 dark:bg-teal-950/20 ring-2 ring-teal-500"
                     : "border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
                 }`}
               >
-                <div className={`p-3 rounded-lg ${format === "pdf" ? "bg-indigo-500 text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-400"}`}>
+                <div className={`p-3 rounded-lg ${format === "pdf" ? "bg-teal-500 text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-400"}`}>
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">PDF Document</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Perfect for print-outs, statements, and visual summaries.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">Perfect for print-outs, statements, and visual summaries.</p>
                 </div>
               </button>
 
               {/* Excel Selector */}
               <button
                 onClick={() => setFormat("excel")}
-                className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all ${
+                className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   format === "excel"
                     ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 ring-2 ring-emerald-500"
                     : "border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
@@ -230,7 +230,7 @@ const ReportsPage = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">Excel Spreadsheet</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Multi-sheet workbook. Best for data sorting and formulas.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">Multi-sheet workbook. Best for data sorting and formulas.</p>
                 </div>
               </button>
             </div>
@@ -241,13 +241,13 @@ const ReportsPage = () => {
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 shadow-md border border-gray-100 dark:border-gray-800 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between h-full min-h-[380px]">
             {/* Header background accents */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
             <div>
               <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white mb-1">
                 Statement Preview
               </h2>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-6 font-semibold">
                 Calculated statistics for {selectedDate || "selected date"}
               </p>
 
@@ -255,49 +255,49 @@ const ReportsPage = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-green-500/10 text-green-500">
+                    <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
                       <ArrowUpRight className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Income</span>
+                    <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Total Income</span>
                   </div>
-                  <span className="font-bold text-green-600 dark:text-green-400">
+                  <span className="font-bold text-teal-600 dark:text-teal-400">
                     ₹{previewMetrics.income.toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-red-500/10 text-red-500">
+                    <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
                       <ArrowDownRight className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expenses</span>
+                    <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Total Expenses</span>
                   </div>
-                  <span className="font-bold text-red-600 dark:text-red-400">
+                  <span className="font-bold text-orange-600 dark:text-orange-400">
                     ₹{previewMetrics.expenses.toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
+                    <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
                       <PiggyBank className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Savings</span>
+                    <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Net Savings</span>
                   </div>
-                  <span className={`font-bold ${previewMetrics.savings >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  <span className={`font-bold ${previewMetrics.savings >= 0 ? "text-teal-600 dark:text-teal-400" : "text-orange-600 dark:text-orange-400"}`}>
                     ₹{previewMetrics.savings.toFixed(2)}
                   </span>
                 </div>
 
                 {/* Additional context */}
                 <div className="mt-4 pt-2 space-y-2">
-                  <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 font-semibold">
                     <span>Outstanding Loans (Lent):</span>
-                    <span className="font-medium text-gray-600 dark:text-gray-300">₹{borrowLendSummary.totalLent.toFixed(2)}</span>
+                    <span className="font-bold text-gray-600 dark:text-gray-300">₹{borrowLendSummary.totalLent.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 font-semibold">
                     <span>Outstanding Debts (Borrowed):</span>
-                    <span className="font-medium text-gray-600 dark:text-gray-300">₹{borrowLendSummary.totalBorrowed.toFixed(2)}</span>
+                    <span className="font-bold text-gray-600 dark:text-gray-300">₹{borrowLendSummary.totalBorrowed.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -311,7 +311,7 @@ const ReportsPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-medium justify-center bg-green-500/5 py-2 rounded-xl"
+                    className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-bold justify-center bg-green-500/5 py-2 rounded-xl"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Report downloaded successfully!
@@ -322,7 +322,7 @@ const ReportsPage = () => {
               <button
                 disabled={isExporting}
                 onClick={handleDownload}
-                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-75 disabled:scale-100 transition-all shadow-md shadow-indigo-500/10 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-teal-600 text-white font-bold hover:bg-teal-700 active:scale-[0.98] disabled:opacity-75 disabled:scale-100 transition-all shadow-md shadow-teal-500/10 cursor-pointer disabled:cursor-not-allowed text-base"
               >
                 {isExporting ? (
                   <>
