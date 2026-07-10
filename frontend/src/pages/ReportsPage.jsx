@@ -199,8 +199,11 @@ const ReportsPage = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* PDF Selector */}
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setFormat("pdf")}
+                onKeyDown={(e) => e.key === 'Enter' && setFormat("pdf")}
                 className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   format === "pdf"
                     ? "border-teal-500 bg-teal-50/30 dark:bg-teal-950/20 ring-2 ring-teal-500"
@@ -211,14 +214,17 @@ const ReportsPage = () => {
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">PDF Document</h3>
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100">PDF Document</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">Perfect for print-outs, statements, and visual summaries.</p>
                 </div>
-              </button>
+              </div>
 
               {/* Excel Selector */}
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setFormat("excel")}
+                onKeyDown={(e) => e.key === 'Enter' && setFormat("excel")}
                 className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   format === "excel"
                     ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 ring-2 ring-emerald-500"
@@ -229,10 +235,10 @@ const ReportsPage = () => {
                   <FileSpreadsheet className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">Excel Spreadsheet</h3>
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100">Excel Spreadsheet</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">Multi-sheet workbook. Best for data sorting and formulas.</p>
                 </div>
-              </button>
+              </div>
             </div>
           </div>
         </div>
