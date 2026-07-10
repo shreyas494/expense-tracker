@@ -260,13 +260,13 @@ const ReportsPage = () => {
                 <input
                   type="text"
                   readOnly
-                  value={user ? `${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user._id}` : "Loading..."}
+                  value={user ? `${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user.id || user._id}` : "Loading..."}
                   className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-950 text-gray-800 dark:text-gray-200 font-mono focus:outline-none"
                 />
                 <button
                   onClick={() => {
                     if (user) {
-                      navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user._id}`);
+                      navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/api/expense/sms-webhook?userId=${user.id || user._id}`);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 3000);
                     }
