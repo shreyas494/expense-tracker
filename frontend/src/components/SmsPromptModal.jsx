@@ -43,6 +43,37 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
     }
   }
 
+  const handleSkip = async () => {
+    setIsSaving(true)
+    setError("")
+
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+      // Call API to mark as needsNote: false, keeping default parsed description/category
+      await axios.put(
+        `${API_BASE}/expense/update-sms-note/${transaction._id}`,
+        {
+          description: transaction.description,
+          category: transaction.category || 'Other',
+          type: transaction.type
+        },
+        { headers }
+      )
+
+      onSaved()
+      onClose()
+    } catch (err) {
+      console.error("Failed to skip SMS note:", err)
+      // Fallback: close modal even if API fails to prevent blocking user
+      onClose()
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+
   const categories = transaction.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
   return (
@@ -143,8 +174,9 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 py-3 border border-gray-200 dark:border-gray-800 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-all text-sm cursor-pointer"
+              disabled={isSaving}
+              onClick={handleSkip}
+              className="flex-1 py-3 border border-gray-200 dark:border-gray-800 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-all text-sm cursor-pointer disabled:opacity-75"
             >
               Skip
             </button>
