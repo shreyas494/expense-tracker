@@ -194,18 +194,37 @@ function parseTransactionSMS(text) {
   const textLower = text.toLowerCase();
   let type = "expense";
   
-  // Detect if credited/received/deposited/added/refunded
-  if (
+  // 1. Determine Type (Debit vs Credit)
+  const hasCreditKeywords = 
     textLower.includes("credited") || 
     textLower.includes("received") || 
     textLower.includes("deposited") || 
     textLower.includes("added to") ||
-    textLower.includes("refunded")
-  ) {
+    textLower.includes("refunded") ||
+    textLower.includes("cr. to") ||
+    textLower.includes("cr to");
+    
+  const hasDebitKeywords =
+    textLower.includes("debited") ||
+    textLower.includes("spent") ||
+    textLower.includes("paid") ||
+    textLower.includes("transferred") ||
+    textLower.includes("withdrawn") ||
+    textLower.includes("dr. from") ||
+    textLower.includes("dr from");
+
+  if (hasCreditKeywords && !textLower.includes("dr. from") && !textLower.includes("dr from")) {
     type = "income";
+  } else if (hasCreditKeywords && hasDebitKeywords) {
+    // If it contains both, identify which one applies to the user's account
+    if (textLower.includes("cr. to a/c") || textLower.includes("cr to a/c") || textLower.includes("credited to a/c") || textLower.includes("credited to your a/c")) {
+      type = "income";
+    } else {
+      type = "expense";
+    }
   }
 
-  // Regex to extract amount (looks for Rs, INR, Re, ₹ followed by number)
+  // 2. Regex to extract amount (looks for Rs, INR, Re, ₹ followed by number)
   const amountRegex = /(?:rs\.?|inr|re\.?|₹)\s*([\d,]+(?:\.\d{1,2})?)/i;
   const match = text.match(amountRegex);
   let amount = 0;
@@ -213,9 +232,9 @@ function parseTransactionSMS(text) {
     amount = parseFloat(match[1].replace(/,/g, ""));
   }
 
-  // Regex to extract merchant/recipient
+  // 3. Regex to extract merchant/recipient (supports @ sign for UPI IDs)
   let description = "SMS Transaction";
-  const merchantRegex = /(?:at|to|vpa|info|sent to|from)\s+([a-zA-Z0-9\s\.\*\/&_-]+?)(?:\s+on|\s+ref|\s+link|\s+balance|\.|$)/i;
+  const merchantRegex = /(?:at|to|vpa|info|sent to|from)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+balance|\.|$)/i;
   const merchMatch = text.match(merchantRegex);
   if (merchMatch && merchMatch[1]) {
     description = merchMatch[1].trim();
@@ -223,6 +242,9 @@ function parseTransactionSMS(text) {
     // Fallback: extract the first few words of the SMS as description
     description = text.substring(0, 30).trim() + "...";
   }
+
+  // Normalize spacing
+  description = description.replace(/\s+/g, " ");
 
   return { type, amount, description };
 }
