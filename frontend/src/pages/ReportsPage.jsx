@@ -161,34 +161,53 @@ const ReportsPage = () => {
 
       const title = `Financial ${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Summary`
       
-      // Construct individual list items of transactions
-      let txListText = ""
-      if (previewMetrics.rangeTransactions && previewMetrics.rangeTransactions.length > 0) {
-        txListText = "\n📝 *Transactions:*\n"
+      // Separate income and expense transactions
+      const incomeList = []
+      const expenseList = []
+      
+      if (previewMetrics.rangeTransactions) {
         previewMetrics.rangeTransactions.forEach(t => {
-          const typeLabel = t.type === 'income' ? '🟢 Income' : '🔴 Expense'
-          // If note (description) is not added, fallback to category name, or default type description
           const noteText = (t.description && t.description.trim())
             ? t.description
             : t.category
               ? t.category
               : (t.type === 'income' ? 'Income' : 'Expense')
+              
+          const line = `• ₹${Number(t.amount || 0).toFixed(2)} - ${noteText}`
           
-          txListText += `${typeLabel}: ₹${Number(t.amount || 0).toFixed(2)} - ${noteText}\n`
+          if (t.type === 'income') {
+            incomeList.push(line)
+          } else {
+            expenseList.push(line)
+          }
         })
-      } else {
-        txListText = "\n📝 *No transactions recorded for this period.*\n"
       }
 
-      // WhatsApp and markdown friendly format
-      const shareText = `📊 *${title}*
+      // Construct the formatted WhatsApp-compatible text
+      let shareText = `📊 *${title}*
 📅 *Period*: ${dateFormatted}
-----------------------------------
-💰 *Total Income*: ₹${previewMetrics.income.toFixed(2)}
-💸 *Total Expenses*: ₹${previewMetrics.expenses.toFixed(2)}
-----------------------------------
-⚖️ *Remaining Balance*: ₹${previewMetrics.savings.toFixed(2)}
-${txListText}`
+==================================\n\n`
+
+      if (incomeList.length > 0) {
+        shareText += `📝 *Income Transactions:*\n`
+        shareText += incomeList.join('\n') + `\n`
+        shareText += `----------------------------------
+💰 *Total Income*: ₹${previewMetrics.income.toFixed(2)}\n\n`
+      }
+
+      if (expenseList.length > 0) {
+        shareText += `📝 *Expense Transactions:*\n`
+        shareText += expenseList.join('\n') + `\n`
+        shareText += `----------------------------------
+💸 *Total Expenses*: ₹${previewMetrics.expenses.toFixed(2)}\n\n`
+      }
+
+      if (incomeList.length === 0 && expenseList.length === 0) {
+        shareText += `📝 *No transactions recorded for this period.*\n\n`
+      }
+
+      shareText += `==================================
+⚖️ *Remaining Balance*: ₹${previewMetrics.savings.toFixed(2)}`
 
       if (navigator.share) {
         await navigator.share({
