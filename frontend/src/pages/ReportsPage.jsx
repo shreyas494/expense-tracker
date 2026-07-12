@@ -480,7 +480,7 @@ const ReportsPage = () => {
 
               <button
                 onClick={handleShareText}
-                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 font-bold hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer text-base border border-gray-200/30 dark:border-slate-800"
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-800 font-bold hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer text-base border border-gray-200/30 dark:border-slate-800"
               >
                 <Share2 className="w-5 h-5 text-teal-600" />
                 Share Text Summary
