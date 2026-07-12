@@ -102,6 +102,16 @@ const ReportsPage = () => {
     return { income, expenses, savings, rangeTransactions }
   }, [transactions, timeframe, selectedDate])
 
+  const currentNetBalance = useMemo(() => {
+    const income = transactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+    const expenses = transactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+    return income - expenses
+  }, [transactions])
+
   const handleDownload = async () => {
     setIsExporting(true)
     setExportSuccess(false)
@@ -183,6 +193,12 @@ const ReportsPage = () => {
         })
       }
 
+      // Calculations for formula formatting
+      const totalIncomeToday = previewMetrics.income
+      const totalExpensesToday = previewMetrics.expenses
+      const finalBalance = currentNetBalance
+      const previousBalance = finalBalance - (totalIncomeToday - totalExpensesToday)
+
       // Construct the formatted WhatsApp-compatible text
       let shareText = `📊 *${title}*
 📅 *Period*: ${dateFormatted}
@@ -192,22 +208,33 @@ const ReportsPage = () => {
         shareText += `📝 *Income Transactions:*\n`
         shareText += incomeList.join('\n') + `\n`
         shareText += `----------------------------------
-💰 *Total Income*: ₹${previewMetrics.income.toFixed(2)}\n\n`
+💰 *Total Income*: ₹${totalIncomeToday.toFixed(2)}
+
+`
+        // Show remaining balance addition calculation
+        const incomeResultBal = previousBalance + totalIncomeToday
+        shareText += `⚖️ *Remaining Balance*: ₹${previousBalance.toFixed(2)} + ₹${totalIncomeToday.toFixed(2)} = ₹${incomeResultBal.toFixed(2)}\n\n`
       }
 
       if (expenseList.length > 0) {
         shareText += `📝 *Expense Transactions:*\n`
         shareText += expenseList.join('\n') + `\n`
         shareText += `----------------------------------
-💸 *Total Expenses*: ₹${previewMetrics.expenses.toFixed(2)}\n\n`
+💸 *Total Expenses*: ₹${totalExpensesToday.toFixed(2)}
+
+`
+        // Show remaining balance subtraction calculation
+        const baseBal = incomeList.length > 0 ? (previousBalance + totalIncomeToday) : previousBalance
+        const expenseResultBal = baseBal - totalExpensesToday
+        shareText += `⚖️ *Remaining Balance*: ₹${baseBal.toFixed(2)} - ₹${totalExpensesToday.toFixed(2)} = ₹${expenseResultBal.toFixed(2)}\n\n`
       }
 
       if (incomeList.length === 0 && expenseList.length === 0) {
         shareText += `📝 *No transactions recorded for this period.*\n\n`
+        shareText += `⚖️ *Remaining Balance*: ₹${finalBalance.toFixed(2)}\n\n`
       }
 
-      shareText += `==================================
-⚖️ *Remaining Balance*: ₹${previewMetrics.savings.toFixed(2)}`
+      shareText += `==================================`
 
       if (navigator.share) {
         await navigator.share({
