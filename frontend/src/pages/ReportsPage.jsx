@@ -65,10 +65,11 @@ const ReportsPage = () => {
   const previewMetrics = useMemo(() => {
     let income = 0
     let expenses = 0
+    let rangeTransactions = []
 
     const targetDate = new Date(selectedDate)
     if (isNaN(targetDate.getTime())) {
-      return { income, expenses, savings: 0 }
+      return { income, expenses, savings: 0, rangeTransactions }
     }
 
     let start, end
@@ -90,6 +91,7 @@ const ReportsPage = () => {
     transactions.forEach(t => {
       const tDate = new Date(t.date)
       if (tDate >= start && tDate <= end) {
+        rangeTransactions.push(t)
         const amt = Number(t.amount || 0)
         if (t.type === "income") income += amt
         else expenses += amt
@@ -97,7 +99,7 @@ const ReportsPage = () => {
     })
 
     const savings = income - expenses
-    return { income, expenses, savings }
+    return { income, expenses, savings, rangeTransactions }
   }, [transactions, timeframe, selectedDate])
 
   const handleDownload = async () => {
@@ -159,6 +161,25 @@ const ReportsPage = () => {
 
       const title = `Financial ${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Summary`
       
+      // Construct individual list items of transactions
+      let txListText = ""
+      if (previewMetrics.rangeTransactions && previewMetrics.rangeTransactions.length > 0) {
+        txListText = "\n📝 *Transactions:*\n"
+        previewMetrics.rangeTransactions.forEach(t => {
+          const typeLabel = t.type === 'income' ? '🟢 Income' : '🔴 Expense'
+          // If note (description) is not added, fallback to category name, or default type description
+          const noteText = (t.description && t.description.trim())
+            ? t.description
+            : t.category
+              ? t.category
+              : (t.type === 'income' ? 'Income' : 'Expense')
+          
+          txListText += `${typeLabel}: ₹${Number(t.amount || 0).toFixed(2)} - ${noteText}\n`
+        })
+      } else {
+        txListText = "\n📝 *No transactions recorded for this period.*\n"
+      }
+
       // WhatsApp and markdown friendly format
       const shareText = `📊 *${title}*
 📅 *Period*: ${dateFormatted}
@@ -167,7 +188,7 @@ const ReportsPage = () => {
 💸 *Total Expenses*: ₹${previewMetrics.expenses.toFixed(2)}
 ----------------------------------
 ⚖️ *Remaining Balance*: ₹${previewMetrics.savings.toFixed(2)}
-`
+${txListText}`
 
       if (navigator.share) {
         await navigator.share({
