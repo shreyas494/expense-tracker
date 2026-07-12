@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, FileSpreadsheet, Download, Calendar, ArrowUpRight, ArrowDownRight, PiggyBank, RefreshCw, CheckCircle, Smartphone, Copy } from 'lucide-react'
+import { FileText, FileSpreadsheet, Download, Calendar, ArrowUpRight, ArrowDownRight, PiggyBank, RefreshCw, CheckCircle, Smartphone, Copy, Share2 } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
@@ -143,6 +143,46 @@ const ReportsPage = () => {
       setIsExporting(false)
     }
   }
+
+  const handleShareText = async () => {
+    try {
+      const dateObj = new Date(selectedDate)
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+      
+      const dateFormatted = isNaN(dateObj.getTime())
+        ? selectedDate
+        : timeframe === 'daily'
+          ? dateObj.toLocaleDateString('en-IN', options)
+          : timeframe === 'monthly'
+            ? dateObj.toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
+            : `Week of ${dateObj.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}`
+
+      const title = `Financial ${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Summary`
+      
+      // WhatsApp and markdown friendly format
+      const shareText = `📊 *${title}*
+📅 *Period*: ${dateFormatted}
+----------------------------------
+💰 *Total Income*: ₹${previewMetrics.income.toFixed(2)}
+💸 *Total Expenses*: ₹${previewMetrics.expenses.toFixed(2)}
+----------------------------------
+⚖️ *Remaining Balance*: ₹${previewMetrics.savings.toFixed(2)}
+`
+
+      if (navigator.share) {
+        await navigator.share({
+          title: title,
+          text: shareText
+        })
+      } else {
+        await navigator.clipboard.writeText(shareText)
+        alert("Summary copied to clipboard! Paste it into WhatsApp or messages to share.")
+      }
+    } catch (err) {
+      console.error("Failed to share/copy summary:", err)
+    }
+  }
+
 
   return (
     <motion.div
@@ -396,6 +436,14 @@ const ReportsPage = () => {
                     Export to {format.toUpperCase()}
                   </>
                 )}
+              </button>
+
+              <button
+                onClick={handleShareText}
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 font-bold hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer text-base border border-gray-200/30 dark:border-slate-800"
+              >
+                <Share2 className="w-5 h-5 text-teal-600" />
+                Share Text Summary
               </button>
             </div>
           </div>
