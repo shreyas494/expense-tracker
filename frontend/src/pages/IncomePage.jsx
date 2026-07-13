@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Edit2, Trash2, Download, X, IndianRupee, Calendar, Tag, FileText, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, X, IndianRupee, Calendar, Tag, FileText, Search, DollarSign } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { INCOME_CATEGORY_ICONS } from '../assets/color'
