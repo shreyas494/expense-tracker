@@ -3,7 +3,7 @@ import { navbarStyles } from '../assets/dummyStyles'
 import img1 from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { ChevronDown, Sun, Moon } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Camera, Upload } from 'lucide-react';
 import { User } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import axios from 'axios';
@@ -14,7 +14,40 @@ const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api
 const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const navigate = useNavigate();
     const menuRef = useRef();
+    const fileInputRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleReceiptUpload = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            await axios.post(
+              `${BASE_URL}/expense/scan-receipt`,
+              { imageBase64: reader.result, mimeType: file.type || 'image/png' },
+              { headers }
+            );
+            window.location.reload();
+          } catch (err) {
+            console.error("Failed to upload receipt:", err);
+          } finally {
+            setIsUploading(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("File read error:", err);
+        setIsUploading(false);
+      }
+    };
 
  
     const [user, setUser] = useState(propUser || {
@@ -96,6 +129,23 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
             {/* if the user is present */}
             {user && (
                 <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleReceiptUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="px-3 py-2 text-xs font-bold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20"
+                    title="Upload & Scan Receipt Screenshot"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span className="hidden sm:inline">{isUploading ? 'Scanning...' : 'Scan Receipt'}</span>
+                  </button>
+
                   <button
                     onClick={toggleTheme}
                     className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer flex items-center justify-center"

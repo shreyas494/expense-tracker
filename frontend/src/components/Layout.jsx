@@ -107,6 +107,7 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
   useEffect(() => {
     const handleWebShareTarget = async () => {
       try {
+        const isSharePath = window.location.pathname.includes('share-target');
         const urlParams = new URLSearchParams(window.location.search);
         let sharedTextContent = [
           urlParams.get('title') || '',
@@ -116,9 +117,9 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
 
         let imageBlob = null;
 
-        // Clear query params from URL bar
-        if (window.location.search) {
-          window.history.replaceState({}, document.title, window.location.pathname);
+        // Clear query params & share-target path from URL bar
+        if (window.location.search || isSharePath) {
+          window.history.replaceState({}, document.title, '/');
         }
 
         // Check Service Worker cache for shared text or image
@@ -162,13 +163,15 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               }
             } catch (iErr) {
               console.error("Scan receipt error:", iErr);
+              fetchPendingNotes();
             }
           };
           reader.readAsDataURL(imageBlob);
-        } else if (sharedTextContent) {
+        } else if (sharedTextContent || isSharePath) {
+          const textToSubmit = sharedTextContent || "Shared Payment Receipt";
           const res = await axios.post(
             `${API_BASE}/expense/sms-webhook`,
-            { text: sharedTextContent },
+            { text: textToSubmit },
             { headers }
           );
           if (res.data.success) {
