@@ -1,5 +1,5 @@
 // TrackExpense PWA Service Worker for Web Share Target
-const CACHE_NAME = 'trackexpense-v1';
+const CACHE_NAME = 'trackexpense-v2';
 const SHARE_CACHE = 'share-cache';
 
 self.addEventListener('install', (event) => {
@@ -7,7 +7,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME && key !== SHARE_CACHE).map((key) => caches.delete(key))
+      );
+    }).then(() => clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {

@@ -445,6 +445,8 @@ export async function scanReceiptImage(req, res) {
       const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
       let geminiRes = null;
 
+      for (const model of models) {
+        try {
           const reqHeaders = {
             'Content-Type': 'application/json',
             'x-goog-api-key': apiKey
@@ -473,7 +475,7 @@ export async function scanReceiptImage(req, res) {
             break;
           }
         } catch (mErr) {
-          console.error(`Gemini model ${model} error:`, mErr);
+          console.error(`Gemini ${model} error:`, mErr);
         }
       }
 
