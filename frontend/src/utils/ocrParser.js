@@ -14,26 +14,27 @@ export function parseTransactionText(text) {
     textLower.includes("cr. to") ||
     textLower.includes("cr to");
     
-  const hasDebitKeywords =
-    textLower.includes("debited") ||
-    textLower.includes("spent") ||
-    textLower.includes("paid") ||
-    textLower.includes("transferred") ||
-    textLower.includes("withdrawn") ||
-    textLower.includes("dr. from") ||
-    textLower.includes("dr from");
-
   if (hasCreditKeywords && !textLower.includes("dr. from") && !textLower.includes("dr from")) {
     type = "income";
   }
 
-  // 2. Extract Amount (Matches ₹1, ₹ 1, Rs. 250, INR 150, 1.00, etc.)
+  // 2. Extract Amount (Handles ₹1, ₹ 1, Rs 1, INR 1, and digits next to ₹)
   let amount = 0;
-  const amountMatch = text.match(/(?:rs\.?|inr|re\.?|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
-  if (amountMatch && amountMatch[1]) {
-    amount = parseFloat(amountMatch[1].replace(/,/g, ""));
-  } else {
-    const standaloneMatch = text.match(/₹\s*(\d+(?:\.\d{1,2})?)/);
+  const amountMatches = text.match(/(?:rs\.?|inr|re\.?|₹|\$|€|£)\s*([\d,]+(?:\.\d{1,2})?)/gi);
+  if (amountMatches && amountMatches.length > 0) {
+    for (const m of amountMatches) {
+      const numStr = m.replace(/[^0-9\.]/g, '');
+      const parsedNum = parseFloat(numStr);
+      if (parsedNum > 0) {
+        amount = parsedNum;
+        break;
+      }
+    }
+  }
+
+  if (amount === 0) {
+    // Fallback: look for standalone rupee numbers or digits near Paid to / Debited from
+    const standaloneMatch = text.match(/(?:₹|rs\.?|inr)\s*(\d+(?:\.\d{1,2})?)/i) || text.match(/(?:paid to|debited|total|amount)\b[\s\S]*?(\d+(?:\.\d{1,2})?)/i);
     if (standaloneMatch && standaloneMatch[1]) {
       amount = parseFloat(standaloneMatch[1]);
     }
@@ -41,16 +42,17 @@ export function parseTransactionText(text) {
 
   // 3. Extract Merchant / Recipient Name
   let description = "";
-  const recipientMatch = text.match(/(?:paid to|sent to|paid|transfer to|to VPA|to merchant|vpa|info)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+via|\s+balance|\s+using|sent to|\.|\n|$)/i);
   
-  if (recipientMatch && recipientMatch[1]) {
-    let rawMerchant = recipientMatch[1].trim();
-    if (rawMerchant.includes('@')) {
-      rawMerchant = rawMerchant.split('@')[0];
-    }
-    rawMerchant = rawMerchant.replace(/^(using|via|on|for|g pay|phonepe)\s+/i, '').trim();
-    if (rawMerchant.length > 1 && !rawMerchant.toLowerCase().includes('phonepe') && !rawMerchant.toLowerCase().includes('gpay')) {
-      description = rawMerchant;
+  // Handle multiline PhonePe / GPay receipt screenshots: "Paid to\nUddesh Bhagyawant PICT"
+  const paidToNextLine = text.match(/(?:paid to|sent to|transfer to)\s*[\n\r]+\s*([^\n\r]+)/i);
+  if (paidToNextLine && paidToNextLine[1]) {
+    description = paidToNextLine[1].trim();
+  }
+
+  if (!description) {
+    const inlineRecipientMatch = text.match(/(?:paid to|sent to|paid|transfer to|to VPA|to merchant|vpa|info)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+via|\s+balance|\s+using|sent to|\.|\n|$)/i);
+    if (inlineRecipientMatch && inlineRecipientMatch[1]) {
+      description = inlineRecipientMatch[1].trim();
     }
   }
 
@@ -61,11 +63,21 @@ export function parseTransactionText(text) {
     }
   }
 
-  if (!description || description.toLowerCase().includes("explore the app") || description.toLowerCase().includes("download")) {
+  // Clean description string
+  if (description) {
+    if (description.includes('@')) {
+      description = description.split('@')[0];
+    }
+    // Remove amount or currency symbols if attached to name
+    description = description.replace(/(?:rs\.?|inr|re\.?|₹)\s*\d+.*/gi, '');
+    description = description.replace(/^(using|via|on|for|g pay|phonepe)\s+/i, '');
+    description = description.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  if (!description || description.length < 2 || description.toLowerCase().includes("explore the app") || description.toLowerCase().includes("download")) {
     description = "Payment Transaction";
   }
 
-  description = description.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
   description = description.charAt(0).toUpperCase() + description.slice(1);
 
   // 4. Auto-Categorize
