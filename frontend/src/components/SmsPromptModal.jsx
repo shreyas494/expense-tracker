@@ -10,7 +10,8 @@ const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Enterta
 
 const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [description, setDescription] = useState(transaction.description || "")
-  const [category, setCategory] = useState(transaction.type === 'income' ? 'Salary' : 'Food')
+  const [amount, setAmount] = useState(transaction.amount != null ? transaction.amount : "")
+  const [category, setCategory] = useState(transaction.category || (transaction.type === 'income' ? 'Salary' : 'Food'))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -26,9 +27,10 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       await axios.put(
         `${API_BASE}/expense/update-sms-note/${transaction._id}`,
         {
-          description,
+          description: description.trim() || 'Payment Transaction',
           category,
-          type: transaction.type
+          type: transaction.type,
+          amount: Number(amount) || transaction.amount || 0
         },
         { headers }
       )
@@ -36,7 +38,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       onSaved()
       onClose()
     } catch (err) {
-      console.error("Failed to update SMS note:", err)
+      console.error("Failed to update transaction note:", err)
       setError("Failed to save. Please try again.")
     } finally {
       setIsSaving(false)
@@ -51,13 +53,13 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token")
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-      // Call API to mark as needsNote: false, keeping default parsed description/category
       await axios.put(
         `${API_BASE}/expense/update-sms-note/${transaction._id}`,
         {
-          description: transaction.description,
+          description: transaction.description || 'Payment Transaction',
           category: transaction.category || 'Other',
-          type: transaction.type
+          type: transaction.type,
+          amount: transaction.amount || 0
         },
         { headers }
       )
@@ -66,13 +68,11 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       onClose()
     } catch (err) {
       console.error("Failed to skip SMS note:", err)
-      // Fallback: close modal even if API fails to prevent blocking user
       onClose()
     } finally {
       setIsSaving(false)
     }
   }
-
 
   const categories = transaction.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
@@ -102,50 +102,59 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              New Transaction Detected!
+              Shared Transaction Detected
             </h3>
             <p className="text-xs text-gray-500 font-semibold">
-              Automatically logged from your phone's SMS.
+              Extracted from shared alert or bank SMS
             </p>
           </div>
         </div>
 
         {/* Transaction Summary Card */}
         <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800 mb-6 space-y-2">
-          <div className="flex justify-between items-baseline">
-            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Amount</span>
-            <span className={`text-xl font-extrabold ${transaction.type === 'income' ? 'text-teal-600 dark:text-teal-400' : 'text-orange-600 dark:text-orange-400'}`}>
-              {transaction.type === 'income' ? '+' : '-'} ₹{Number(transaction.amount).toFixed(2)}
-            </span>
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Amount (₹)</span>
+            <div className="flex items-center gap-1">
+              <span className={`text-sm font-extrabold ${transaction.type === 'income' ? 'text-teal-600 dark:text-teal-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                {transaction.type === 'income' ? '+' : '-'} ₹
+              </span>
+              <input
+                type="number"
+                step="any"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className={`w-28 text-right font-extrabold text-lg px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 ${transaction.type === 'income' ? 'text-teal-600 dark:text-teal-400' : 'text-orange-600 dark:text-orange-400'}`}
+              />
+            </div>
           </div>
           <div className="flex justify-between text-xs font-semibold text-gray-500">
             <span>Date logged:</span>
             <span className="text-gray-700 dark:text-gray-300">
-              {new Date(transaction.createdAt).toLocaleString()}
+              {new Date(transaction.createdAt || transaction.date || Date.now()).toLocaleString()}
             </span>
-          </div>
-          <div className="text-xs font-semibold text-gray-500">
-            <span>Raw text:</span>
-            <p className="mt-1 text-gray-600 dark:text-gray-300 italic bg-gray-100 dark:bg-slate-800 p-2 rounded-lg font-mono text-[10px] break-all leading-normal">
-              {transaction.description}
-            </p>
           </div>
         </div>
 
         {/* Edit Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5" />
-              Add description Note
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5" />
+                Description / Note
+              </span>
+              {(!description || description.toLowerCase().includes('payment transaction')) && (
+                <span className="text-[10px] text-amber-500 font-extrabold uppercase">Note Required</span>
+              )}
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Swiggy food delivery, Salary bonus"
+              placeholder="e.g. Uddesh Bhagyawant, Swiggy dinner, Tea & snacks"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold"
             />
           </div>
 
@@ -157,7 +166,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold cursor-pointer"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>

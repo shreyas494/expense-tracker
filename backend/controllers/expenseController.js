@@ -189,7 +189,7 @@ export async function getExpenseOverview(req,res){
     }
 }
 
-// Regex parsing function for standard Indian bank SMS transaction alerts
+// Regex parsing function for standard Indian bank SMS transaction alerts & PhonePe/GPay share texts
 function parseTransactionSMS(text) {
   const textLower = text.toLowerCase();
   let type = "expense";
@@ -216,7 +216,6 @@ function parseTransactionSMS(text) {
   if (hasCreditKeywords && !textLower.includes("dr. from") && !textLower.includes("dr from")) {
     type = "income";
   } else if (hasCreditKeywords && hasDebitKeywords) {
-    // If it contains both, identify which one applies to the user's account
     if (textLower.includes("cr. to a/c") || textLower.includes("cr to a/c") || textLower.includes("credited to a/c") || textLower.includes("credited to your a/c")) {
       type = "income";
     } else {
@@ -232,70 +231,110 @@ function parseTransactionSMS(text) {
     amount = parseFloat(match[1].replace(/,/g, ""));
   }
 
-  // 3. Regex to extract merchant/recipient (supports @ sign for UPI IDs)
-  let description = "SMS Transaction";
-  const merchantRegex = /(?:at|to|vpa|info|sent to|from)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+balance|\.|$)/i;
-  const merchMatch = text.match(merchantRegex);
-  if (merchMatch && merchMatch[1]) {
-    description = merchMatch[1].trim();
-  } else {
-    // Fallback: extract the first few words of the SMS as description
-    description = text.substring(0, 30).trim() + "...";
+  // 3. Extract Merchant / Recipient
+  let description = "";
+  // Check for PhonePe/GPay patterns like "Paid to Swiggy", "Sent to Rahul", "Paid Rs 1 to Uddesh"
+  const upiRecipientMatch = text.match(/(?:paid to|sent to|paid|transfer to|to VPA|to merchant|vpa|info)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+via|\s+balance|\s+using|\.|$)/i);
+  
+  if (upiRecipientMatch && upiRecipientMatch[1]) {
+    let rawMerchant = upiRecipientMatch[1].trim();
+    // Clean up VPA handle if present (swiggy@icici -> Swiggy)
+    if (rawMerchant.includes('@')) {
+      rawMerchant = rawMerchant.split('@')[0];
+    }
+    // Remove noise words
+    rawMerchant = rawMerchant.replace(/^(using|via|on|for)\s+/i, '').trim();
+    if (rawMerchant.length > 1 && !rawMerchant.toLowerCase().includes('phonepe') && !rawMerchant.toLowerCase().includes('gpay')) {
+      description = rawMerchant;
+    }
   }
 
-  // Normalize spacing
-  description = description.replace(/\s+/g, " ");
+  if (!description) {
+    // Fallback: extract merchant from text snippet
+    const merchMatch = text.match(/(?:at|from)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\.|$)/i);
+    if (merchMatch && merchMatch[1]) {
+      description = merchMatch[1].trim();
+    }
+  }
 
-  return { type, amount, description };
+  // Final fallback if description is empty or generic promo text
+  if (!description || description.toLowerCase().includes("explore the app") || description.toLowerCase().includes("download")) {
+    description = "Payment Transaction";
+  }
+
+  // Capitalize clean description
+  description = description.replace(/\s+/g, " ").trim();
+  description = description.charAt(0).toUpperCase() + description.slice(1);
+
+  // 4. Auto-Categorization Logic
+  let category = type === "income" ? "Salary" : "Other";
+  const descLower = description.toLowerCase();
+
+  if (descLower.includes("swiggy") || descLower.includes("zomato") || descLower.includes("restaurant") || descLower.includes("cafe") || descLower.includes("food") || descLower.includes("kfc") || descLower.includes("mcdonald") || descLower.includes("starbucks") || descLower.includes("domino")) {
+    category = "Food";
+  } else if (descLower.includes("uber") || descLower.includes("ola") || descLower.includes("rapido") || descLower.includes("metro") || descLower.includes("petrol") || descLower.includes("fuel") || descLower.includes("shell") || descLower.includes("transport")) {
+    category = "Transport";
+  } else if (descLower.includes("amazon") || descLower.includes("flipkart") || descLower.includes("myntra") || descLower.includes("ajio") || descLower.includes("meesho") || descLower.includes("shopping") || descLower.includes("mart") || descLower.includes("bazaar")) {
+    category = "Shopping";
+  } else if (descLower.includes("bookmyshow") || descLower.includes("netflix") || descLower.includes("spotify") || descLower.includes("cinema") || descLower.includes("movie") || descLower.includes("game")) {
+    category = "Entertainment";
+  } else if (descLower.includes("recharge") || descLower.includes("jio") || descLower.includes("airtel") || descLower.includes("electricity") || descLower.includes("water") || descLower.includes("bill") || descLower.includes("broadband")) {
+    category = "Utilities";
+  } else if (descLower.includes("pharmacy") || descLower.includes("apollo") || descLower.includes("hospital") || descLower.includes("doctor") || descLower.includes("health") || descLower.includes("clinic")) {
+    category = "Healthcare";
+  } else if (descLower.includes("rent") || descLower.includes("society") || descLower.includes("maintenance") || descLower.includes("housing")) {
+    category = "Housing";
+  } else if (type === "income") {
+    if (descLower.includes("freelance") || descLower.includes("upwork") || descLower.includes("fiverr")) category = "Freelance";
+    else if (descLower.includes("dividend") || descLower.includes("interest") || descLower.includes("stock") || descLower.includes("invest")) category = "Investment";
+    else if (descLower.includes("bonus") || descLower.includes("cashback") || descLower.includes("reward")) category = "Bonus";
+  }
+
+  return { type, amount, description, category };
 }
 
-// Controller for SMS Webhook
+// Controller for SMS / Web Share Target Webhook
 export async function addSmsTransaction(req, res) {
   const userId = req.user ? req.user._id : req.query.userId;
   if (!userId) {
     return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
   }
 
-  // Support typical fields that SMS Forwarder apps send
   const smsText = req.body.text || req.body.body || req.body.message || req.body.content;
   
   if (!smsText) {
-    return res.status(400).json({ success: false, message: "No SMS body text provided in request payload" });
+    return res.status(400).json({ success: false, message: "No transaction text provided in request payload" });
   }
 
   try {
-    const { type, amount, description } = parseTransactionSMS(smsText);
-
-    if (amount <= 0) {
-      return res.status(400).json({ success: false, message: "Parsed amount is zero or invalid" });
-    }
+    const { type, amount, description, category } = parseTransactionSMS(smsText);
 
     let result;
     if (type === "income") {
       result = new incomeModel({
         userId,
-        amount,
-        description: `SMS: ${description}`,
-        category: "Other",
+        amount: amount || 0,
+        description: description,
+        category: category || "Salary",
         date: new Date(),
         needsNote: true
       });
     } else {
       result = new expenseModel({
         userId,
-        amount,
-        description: `SMS: ${description}`,
-        category: "Other",
+        amount: amount || 0,
+        description: description,
+        category: category || "Other",
         date: new Date(),
         needsNote: true
       });
     }
 
     await result.save();
-    res.status(201).json({ success: true, message: "SMS transaction logged", data: result });
+    res.status(201).json({ success: true, message: "Transaction logged successfully", data: result });
   } catch (error) {
     console.error("addSmsTransaction error:", error);
-    res.status(500).json({ success: false, message: "Server error logging SMS transaction" });
+    res.status(500).json({ success: false, message: "Server error logging transaction" });
   }
 }
 
@@ -321,28 +360,33 @@ export async function getPendingNotes(req, res) {
   }
 }
 
-// Controller to update note/category
+// Controller to update note/amount/category
 export async function updateSmsTransactionNote(req, res) {
   const { id } = req.params;
   const userId = req.user._id;
-  const { description, category, type } = req.body;
+  const { description, category, type, amount } = req.body;
 
   if (!description || !category || !type) {
     return res.status(400).json({ success: false, message: "Description, category, and type are required" });
   }
 
   try {
+    const updateFields = { description, category, needsNote: false };
+    if (amount != null && Number(amount) > 0) {
+      updateFields.amount = Number(amount);
+    }
+
     let transaction;
     if (type === "income") {
       transaction = await incomeModel.findOneAndUpdate(
         { _id: id, userId },
-        { description, category, needsNote: false },
+        updateFields,
         { new: true }
       );
     } else {
       transaction = await expenseModel.findOneAndUpdate(
         { _id: id, userId },
-        { description, category, needsNote: false },
+        updateFields,
         { new: true }
       );
     }
