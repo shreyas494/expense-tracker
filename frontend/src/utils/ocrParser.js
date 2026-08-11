@@ -221,7 +221,9 @@ export async function scanReceiptWithOCR(imageSource) {
   try {
     debugLog.push('Running Tesseract OCR (Inverted Dark Mode Canvas)');
     const processedSource = await preprocessDarkScreenshot(imageSource);
-    const worker = await createWorker('eng');
+    const worker = await createWorker('eng', 1, {
+      logger: m => debugLog.push(`Tesseract [${m.status}]: ${Math.round((m.progress||0)*100)}%`)
+    });
     const ret = await worker.recognize(processedSource);
     await worker.terminate();
 
