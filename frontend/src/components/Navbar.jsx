@@ -29,19 +29,48 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const ocrResult = await scanReceiptWithOCR(file);
-        const textToSubmit = ocrResult.rawText?.trim() || "Shared Payment Receipt";
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            const base64Data = reader.result;
+            // 1. First send to backend Gemini Vision scanner
+            const res = await axios.post(
+              `${BASE_URL}/expense/scan-receipt`,
+              { imageBase64: base64Data, mimeType: file.type || 'image/png' },
+              { headers }
+            );
 
-        await axios.post(
-          `${BASE_URL}/expense/sms-webhook`,
-          { text: textToSubmit },
-          { headers }
-        );
-
-        window.location.reload();
+            // If backend Gemini scan did not find non-zero amount, run client OCR fallback
+            if (res.data?.data?.amount === 0) {
+              const ocrResult = await scanReceiptWithOCR(file);
+              if (ocrResult.amount > 0 || ocrResult.description !== "Payment Transaction") {
+                await axios.post(
+                  `${BASE_URL}/expense/sms-webhook`,
+                  { text: ocrResult.rawText },
+                  { headers }
+                );
+              }
+            }
+          } catch (err) {
+            console.error("Backend scan failed, running client OCR fallback:", err);
+            try {
+              const ocrResult = await scanReceiptWithOCR(file);
+              await axios.post(
+                `${BASE_URL}/expense/sms-webhook`,
+                { text: ocrResult.rawText || "Shared Payment Receipt" },
+                { headers }
+              );
+            } catch (cErr) {
+              console.error("Client OCR fallback error:", cErr);
+            }
+          } finally {
+            setIsUploading(false);
+            window.location.reload();
+          }
+        };
+        reader.readAsDataURL(file);
       } catch (err) {
-        console.error("Failed to scan receipt:", err);
-      } finally {
+        console.error("Failed to read receipt file:", err);
         setIsUploading(false);
       }
     };
