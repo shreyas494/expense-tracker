@@ -108,7 +108,10 @@ export function parseTransactionText(text) {
 }
 
 export async function scanReceiptWithOCR(imageSource) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey.startsWith('AQ.')) {
+    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  }
   const debugLog = [];
 
   if (apiKey) {

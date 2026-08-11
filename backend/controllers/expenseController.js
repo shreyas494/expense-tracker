@@ -439,7 +439,10 @@ export async function scanReceiptImage(req, res) {
     return res.status(400).json({ success: false, message: "No image provided" });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey.startsWith('AQ.')) {
+    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  }
 
   const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
   const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
