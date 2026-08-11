@@ -443,8 +443,8 @@ export async function scanReceiptImage(req, res) {
   if (!apiKey || apiKey.startsWith('AQ.')) {
     apiKey = process.env.VITE_GEMINI_API_KEY;
   }
-  if (apiKey && apiKey.startsWith('AQ.')) {
-    apiKey = null;
+  if (!apiKey || apiKey.startsWith('AQ.')) {
+    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
   }
 
   if (!apiKey) {

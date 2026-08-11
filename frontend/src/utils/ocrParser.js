@@ -139,8 +139,8 @@ async function preprocessDarkScreenshot(imageSource) {
 
 export async function scanReceiptWithOCR(imageSource) {
   let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (apiKey && apiKey.startsWith('AQ.')) {
-    apiKey = null; // Do not send GCP enterprise AQ. tokens to Generative AI REST endpoint
+  if (!apiKey || apiKey.startsWith('AQ.')) {
+    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
   }
 
   const debugLog = [];
