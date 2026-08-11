@@ -14,7 +14,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Intercept incoming Share Target POST requests
-  if (event.request.method === 'POST' && url.pathname === '/share-target') {
+  if (event.request.method === 'POST' && url.pathname.includes('share-target')) {
     event.respondWith((async () => {
       try {
         const formData = await event.request.formData();
