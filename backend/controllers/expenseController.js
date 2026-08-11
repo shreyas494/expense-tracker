@@ -444,6 +444,19 @@ export async function scanReceiptImage(req, res) {
     apiKey = null;
   }
 
+  if (!apiKey) {
+    const defaultResult = new expenseModel({
+      userId,
+      amount: 0,
+      description: "Shared Payment Receipt",
+      category: "Other",
+      date: new Date(),
+      needsNote: true
+    });
+    await defaultResult.save();
+    return res.status(200).json({ success: true, message: "Default receipt transaction created", data: defaultResult });
+  }
+
   const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
   const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
   let geminiRes = null;

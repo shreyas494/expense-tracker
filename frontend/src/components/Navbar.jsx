@@ -29,55 +29,40 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const base64Data = reader.result;
-            // 1. First send to backend Gemini Vision scanner
-            const res = await axios.post(
-              `${BASE_URL}/expense/scan-receipt`,
-              { imageBase64: base64Data, mimeType: file.type || 'image/png' },
-              { headers }
-            );
+        // 1. Run client-side High-Contrast Canvas OCR first
+        const ocrResult = await scanReceiptWithOCR(file);
 
-            // If backend Gemini scan did not find non-zero amount, run client OCR fallback
-            if (res.data?.data?.amount === 0) {
-              const ocrResult = await scanReceiptWithOCR(file);
-              if (ocrResult.amount > 0 || ocrResult.description !== "Payment Transaction") {
+        if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
+          const textToSubmit = ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}`;
+          await axios.post(
+            `${BASE_URL}/expense/sms-webhook`,
+            { text: textToSubmit },
+            { headers }
+          );
+        } else {
+          // 2. If client OCR did not find non-zero amount, call backend scan-receipt
+          const reader = new FileReader();
+          await new Promise((resolve) => {
+            reader.onloadend = async () => {
+              try {
                 await axios.post(
-                  `${BASE_URL}/expense/sms-webhook`,
-                  { text: ocrResult.rawText },
+                  `${BASE_URL}/expense/scan-receipt`,
+                  { imageBase64: reader.result, mimeType: file.type || 'image/png' },
                   { headers }
                 );
+              } catch (bErr) {
+                console.error("Backend scan-receipt error:", bErr);
               }
-            }
-          } catch (err) {
-            console.error("Backend scan failed:", err);
-            const serverErrMsg = err.response?.data?.message;
-            if (serverErrMsg) {
-              alert(`Scan Receipt Warning: ${serverErrMsg}`);
-            }
-            try {
-              const ocrResult = await scanReceiptWithOCR(file);
-              if (ocrResult.amount > 0 || ocrResult.description !== "Payment Transaction") {
-                await axios.post(
-                  `${BASE_URL}/expense/sms-webhook`,
-                  { text: ocrResult.rawText },
-                  { headers }
-                );
-              }
-            } catch (cErr) {
-              console.error("Client OCR fallback error:", cErr);
-            }
-          } finally {
-            setIsUploading(false);
-            window.location.reload();
-          }
-        };
-        reader.readAsDataURL(file);
+              resolve();
+            };
+            reader.readAsDataURL(file);
+          });
+        }
       } catch (err) {
-        console.error("Failed to read receipt file:", err);
+        console.error("Receipt upload error:", err);
+      } finally {
         setIsUploading(false);
+        window.location.reload();
       }
     };
 
