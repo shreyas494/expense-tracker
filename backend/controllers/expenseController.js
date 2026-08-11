@@ -445,13 +445,19 @@ export async function scanReceiptImage(req, res) {
       const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
       let geminiRes = null;
 
-      for (const model of models) {
-        try {
+          const reqHeaders = {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          };
+          if (apiKey.startsWith('AQ.')) {
+            reqHeaders['Authorization'] = `Bearer ${apiKey}`;
+          }
+
           const r = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
             {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: reqHeaders,
               body: JSON.stringify({
                 contents: [{
                   parts: [

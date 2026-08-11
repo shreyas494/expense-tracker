@@ -131,11 +131,19 @@ export async function scanReceiptWithOCR(imageSource) {
         for (const model of models) {
           try {
             debugLog.push(`Calling ${model}`);
+            const reqHeaders = {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            };
+            if (apiKey.startsWith('AQ.')) {
+              reqHeaders['Authorization'] = `Bearer ${apiKey}`;
+            }
+
             const geminiRes = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
               {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: reqHeaders,
                 body: JSON.stringify({
                   contents: [{
                     parts: [
