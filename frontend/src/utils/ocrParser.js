@@ -105,33 +105,38 @@ export function parseTransactionText(text) {
   return { type, amount, description, category };
 }
 
-// Invert dark mode screenshot colors for high contrast Tesseract OCR
+// Invert dark mode screenshot colors for high contrast Tesseract OCR via FileReader
 async function preprocessDarkScreenshot(imageSource) {
   return new Promise((resolve) => {
     try {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(imageSource);
-
-        ctx.filter = 'invert(100%) grayscale(100%) contrast(150%)';
-        ctx.drawImage(img, 0, 0);
-        try {
-          resolve(canvas.toDataURL('image/png'));
-        } catch (e) {
-          resolve(imageSource);
-        }
+      const getBase64 = (src) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return resolve(src);
+            ctx.filter = 'invert(100%) grayscale(100%) contrast(150%)';
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (err) {
+            resolve(src);
+          }
+        };
+        img.onerror = () => resolve(src);
+        img.src = src;
       };
-      img.onerror = () => resolve(imageSource);
 
       if (typeof imageSource === 'string') {
-        img.src = imageSource;
+        getBase64(imageSource);
       } else if (imageSource instanceof Blob || imageSource instanceof File) {
-        img.src = URL.createObjectURL(imageSource);
+        const reader = new FileReader();
+        reader.onloadend = () => getBase64(reader.result);
+        reader.onerror = () => resolve(imageSource);
+        reader.readAsDataURL(imageSource);
       } else {
         resolve(imageSource);
       }
