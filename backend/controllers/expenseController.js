@@ -251,9 +251,9 @@ function parseTransactionSMS(text) {
 
 // Controller for SMS Webhook
 export async function addSmsTransaction(req, res) {
-  const { userId } = req.query;
+  const userId = req.user ? req.user._id : req.query.userId;
   if (!userId) {
-    return res.status(400).json({ success: false, message: "userId query parameter is required" });
+    return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
   }
 
   // Support typical fields that SMS Forwarder apps send

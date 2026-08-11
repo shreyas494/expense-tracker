@@ -103,6 +103,42 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
     return () => clearInterval(interval);
   }, []);
 
+  // Handle incoming Web Share Target parameters (e.g. from GPay/PhonePe share sheet)
+  useEffect(() => {
+    const handleWebShareTarget = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedTitle = urlParams.get('title') || '';
+        const sharedText = urlParams.get('text') || '';
+        const sharedUrl = urlParams.get('url') || '';
+
+        const fullSharedContent = [sharedTitle, sharedText, sharedUrl].filter(Boolean).join(' ');
+
+        if (fullSharedContent) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+          if (!token) return;
+
+          const headers = { Authorization: `Bearer ${token}` };
+          const res = await axios.post(
+            `${API_BASE}/expense/sms-webhook`,
+            { text: fullSharedContent },
+            { headers }
+          );
+
+          if (res.data.success) {
+            fetchPendingNotes();
+          }
+        }
+      } catch (err) {
+        console.error("Error processing web share target:", err);
+      }
+    };
+
+    handleWebShareTarget();
+  }, []);
+
 
   // to fetch transactions from server side
    const fetchTransactions = async () => {
