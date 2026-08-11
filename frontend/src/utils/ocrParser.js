@@ -194,9 +194,11 @@ export async function scanReceiptWithOCR(imageSource) {
       debugLog.push('Tesseract found text but could not parse amount > 0');
     }
 
+    const outputText = parsed.description !== "Payment Transaction" ? rawText : `Log: ${debugLog.join(' | ')}`;
+
     return {
       success: true,
-      rawText: rawText || 'No text recognized',
+      rawText: outputText || 'No text recognized',
       ...parsed,
       debug: debugLog.join(' → ')
     };
@@ -208,6 +210,7 @@ export async function scanReceiptWithOCR(imageSource) {
       description: "Shared Payment Receipt",
       category: "Other",
       type: "expense",
+      rawText: `Log: ${debugLog.join(' | ')}`,
       debug: debugLog.join(' → ')
     };
   }
