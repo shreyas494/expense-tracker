@@ -29,12 +29,10 @@ export function parseTransactionText(text) {
 
   // 2. Extract Amount (Matches ₹1, ₹ 1, Rs. 250, INR 150, 1.00, etc.)
   let amount = 0;
-  // Match currency symbol followed by numbers
   const amountMatch = text.match(/(?:rs\.?|inr|re\.?|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
   if (amountMatch && amountMatch[1]) {
     amount = parseFloat(amountMatch[1].replace(/,/g, ""));
   } else {
-    // Fallback: look for standalone rupee amounts in screenshots (e.g. ₹1 in PhonePe)
     const standaloneMatch = text.match(/₹\s*(\d+(?:\.\d{1,2})?)/);
     if (standaloneMatch && standaloneMatch[1]) {
       amount = parseFloat(standaloneMatch[1]);
@@ -43,7 +41,6 @@ export function parseTransactionText(text) {
 
   // 3. Extract Merchant / Recipient Name
   let description = "";
-  // Look for "Paid to <Name>", "Sent to <Name>", "Paid <Name>"
   const recipientMatch = text.match(/(?:paid to|sent to|paid|transfer to|to VPA|to merchant|vpa|info)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+via|\s+balance|\s+using|sent to|\.|\n|$)/i);
   
   if (recipientMatch && recipientMatch[1]) {
@@ -68,7 +65,6 @@ export function parseTransactionText(text) {
     description = "Payment Transaction";
   }
 
-  // Clean description spacing & line breaks
   description = description.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
   description = description.charAt(0).toUpperCase() + description.slice(1);
 
@@ -100,6 +96,68 @@ export function parseTransactionText(text) {
 }
 
 export async function scanReceiptWithOCR(imageSource) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (apiKey) {
+    try {
+      let base64Data = '';
+      if (typeof imageSource === 'string' && imageSource.startsWith('data:image')) {
+        base64Data = imageSource.replace(/^data:image\/\w+;base64,/, '');
+      } else if (imageSource instanceof Blob || imageSource instanceof File) {
+        base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.replace(/^data:image\/\w+;base64,/, ''));
+          reader.onerror = reject;
+          reader.readAsDataURL(imageSource);
+        });
+      }
+
+      if (base64Data) {
+        const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+        for (const model of models) {
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{
+                    parts: [
+                      { inlineData: { mimeType: 'image/png', data: base64Data } },
+                      { text: 'Analyze this UPI/bank payment receipt screenshot. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "merchant or person name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
+                    ]
+                  }]
+                })
+              }
+            );
+
+            if (geminiRes.ok) {
+              const jsonResult = await geminiRes.json();
+              const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
+              const parsedAi = JSON.parse(cleanedJsonStr);
+
+              return {
+                success: true,
+                rawText: `Paid to ${parsedAi.description || ''} ₹${parsedAi.amount || 0}`,
+                amount: Number(parsedAi.amount) || 0,
+                description: parsedAi.description || "Payment Transaction",
+                category: parsedAi.category || "Other",
+                type: parsedAi.type || "expense"
+              };
+            }
+          } catch (mErr) {
+            console.error(`Gemini model ${model} error:`, mErr);
+          }
+        }
+      }
+    } catch (gErr) {
+      console.error("Gemini frontend scan error:", gErr);
+    }
+  }
+
+  // Fallback to Tesseract OCR
   try {
     const worker = await createWorker('eng');
     const ret = await worker.recognize(imageSource);
