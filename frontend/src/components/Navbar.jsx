@@ -9,6 +9,8 @@ import { LogOut } from 'lucide-react';
 import axios from 'axios';
 
 
+import { scanReceiptWithOCR } from '../utils/ocrParser';
+
 const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
 const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
@@ -27,24 +29,19 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            await axios.post(
-              `${BASE_URL}/expense/scan-receipt`,
-              { imageBase64: reader.result, mimeType: file.type || 'image/png' },
-              { headers }
-            );
-            window.location.reload();
-          } catch (err) {
-            console.error("Failed to upload receipt:", err);
-          } finally {
-            setIsUploading(false);
-          }
-        };
-        reader.readAsDataURL(file);
+        const ocrResult = await scanReceiptWithOCR(file);
+        const textToSubmit = ocrResult.rawText?.trim() || "Shared Payment Receipt";
+
+        await axios.post(
+          `${BASE_URL}/expense/sms-webhook`,
+          { text: textToSubmit },
+          { headers }
+        );
+
+        window.location.reload();
       } catch (err) {
-        console.error("File read error:", err);
+        console.error("Failed to scan receipt:", err);
+      } finally {
         setIsUploading(false);
       }
     };

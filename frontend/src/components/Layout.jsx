@@ -8,6 +8,7 @@ import { Outlet } from 'react-router-dom'
 import axios from 'axios'
 import SmsPromptModal from './SmsPromptModal'
 import { AnimatePresence } from 'framer-motion'
+import { scanReceiptWithOCR } from '../utils/ocrParser'
 
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
@@ -149,24 +150,28 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
         const headers = { Authorization: `Bearer ${token}` };
 
         if (imageBlob) {
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const base64data = reader.result;
-            try {
-              const res = await axios.post(
-                `${API_BASE}/expense/scan-receipt`,
-                { imageBase64: base64data, mimeType: imageBlob.type || 'image/png' },
-                { headers }
-              );
-              if (res.data.success) {
-                fetchPendingNotes();
-              }
-            } catch (iErr) {
-              console.error("Scan receipt error:", iErr);
+          try {
+            // Run client-side Tesseract OCR on the shared image
+            const ocrResult = await scanReceiptWithOCR(imageBlob);
+            const textToSubmit = ocrResult.rawText?.trim() || "Shared Payment Receipt";
+
+            const res = await axios.post(
+              `${API_BASE}/expense/sms-webhook`,
+              { text: textToSubmit },
+              { headers }
+            );
+            if (res.data.success) {
               fetchPendingNotes();
             }
-          };
-          reader.readAsDataURL(imageBlob);
+          } catch (iErr) {
+            console.error("OCR image error:", iErr);
+            await axios.post(
+              `${API_BASE}/expense/sms-webhook`,
+              { text: "Shared Payment Receipt" },
+              { headers }
+            );
+            fetchPendingNotes();
+          }
         } else if (sharedTextContent || isSharePath) {
           const textToSubmit = sharedTextContent || "Shared Payment Receipt";
           const res = await axios.post(

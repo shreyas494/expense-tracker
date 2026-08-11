@@ -50,8 +50,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Default fetch handler
+  // Default fetch handler (ignore non-GET, API, or external requests)
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api') || url.hostname !== self.location.hostname) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+    })
   );
 });
