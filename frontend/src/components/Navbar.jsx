@@ -52,14 +52,20 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
               }
             }
           } catch (err) {
-            console.error("Backend scan failed, running client OCR fallback:", err);
+            console.error("Backend scan failed:", err);
+            const serverErrMsg = err.response?.data?.message;
+            if (serverErrMsg) {
+              alert(`Scan Receipt Warning: ${serverErrMsg}`);
+            }
             try {
               const ocrResult = await scanReceiptWithOCR(file);
-              await axios.post(
-                `${BASE_URL}/expense/sms-webhook`,
-                { text: ocrResult.rawText || "Shared Payment Receipt" },
-                { headers }
-              );
+              if (ocrResult.amount > 0 || ocrResult.description !== "Payment Transaction") {
+                await axios.post(
+                  `${BASE_URL}/expense/sms-webhook`,
+                  { text: ocrResult.rawText },
+                  { headers }
+                );
+              }
             } catch (cErr) {
               console.error("Client OCR fallback error:", cErr);
             }

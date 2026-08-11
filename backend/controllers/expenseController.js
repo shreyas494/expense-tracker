@@ -435,83 +435,92 @@ export async function scanReceiptImage(req, res) {
   }
 
   const { imageBase64, mimeType = 'image/png' } = req.body;
-  let extracted = { amount: 0, description: "Shared Payment Receipt", category: "Other", type: "expense" };
+  if (!imageBase64) {
+    return res.status(400).json({ success: false, message: "No image provided" });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-  if (imageBase64 && apiKey) {
+  if (!apiKey) {
+    return res.status(400).json({ success: false, message: "GEMINI_API_KEY environment variable is not configured on server" });
+  }
+
+  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+  const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+  let geminiRes = null;
+  let lastError = '';
+
+  for (const model of models) {
     try {
-      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
-      let geminiRes = null;
+      const reqHeaders = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      };
+      if (apiKey.startsWith('AQ.')) {
+        reqHeaders['Authorization'] = `Bearer ${apiKey}`;
+      }
 
-      for (const model of models) {
-        try {
-          const reqHeaders = {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          };
-          if (apiKey.startsWith('AQ.')) {
-            reqHeaders['Authorization'] = `Bearer ${apiKey}`;
-          }
-
-          const r = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-              method: 'POST',
-              headers: reqHeaders,
-              body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { inlineData: { mimeType, data: cleanBase64 } },
-                    { text: 'Analyze this transaction screenshot carefully. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown formatting: {"amount": 1, "type": "expense", "description": "recipient or merchant name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
-                  ]
-                }]
-              })
-            }
-          );
-          if (r.ok) {
-            geminiRes = r;
-            break;
-          }
-        } catch (mErr) {
-          console.error(`Gemini ${model} error:`, mErr);
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inlineData: { mimeType, data: cleanBase64 } },
+                { text: 'Analyze this transaction screenshot carefully. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown formatting: {"amount": 1, "type": "expense", "description": "recipient or merchant name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
+              ]
+            }]
+          })
         }
-      }
+      );
 
-      if (geminiRes) {
-        const jsonResult = await geminiRes.json();
-        const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
-        const parsedAi = JSON.parse(cleanedJsonStr);
-
-        if (parsedAi.amount != null && !isNaN(parsedAi.amount)) extracted.amount = Number(parsedAi.amount);
-        if (parsedAi.description) extracted.description = String(parsedAi.description).trim();
-        if (parsedAi.category) extracted.category = String(parsedAi.category).trim();
-        if (parsedAi.type) extracted.type = String(parsedAi.type).trim();
+      if (r.ok) {
+        geminiRes = r;
+        break;
+      } else {
+        const errTxt = await r.text();
+        lastError = `${model} HTTP ${r.status}: ${errTxt.slice(0, 150)}`;
+        console.error(`Gemini ${model} HTTP ${r.status}:`, errTxt);
       }
-    } catch (gErr) {
-      console.error("Gemini receipt scan error:", gErr);
+    } catch (mErr) {
+      lastError = `${model} fetch error: ${mErr.message}`;
+      console.error(`Gemini ${model} error:`, mErr);
     }
   }
 
+  if (!geminiRes) {
+    return res.status(422).json({ success: false, message: `Gemini AI Scan failed. ${lastError}` });
+  }
+
   try {
+    const jsonResult = await geminiRes.json();
+    const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
+    const parsedAi = JSON.parse(cleanedJsonStr);
+
+    const amount = (parsedAi.amount != null && !isNaN(parsedAi.amount)) ? Number(parsedAi.amount) : 0;
+    const description = parsedAi.description ? String(parsedAi.description).trim() : "Payment Transaction";
+    const category = parsedAi.category ? String(parsedAi.category).trim() : "Other";
+    const type = parsedAi.type === "income" ? "income" : "expense";
+
     let result;
-    if (extracted.type === "income") {
+    if (type === "income") {
       result = new incomeModel({
         userId,
-        amount: extracted.amount || 0,
-        description: extracted.description,
-        category: extracted.category || "Salary",
+        amount,
+        description,
+        category: category || "Salary",
         date: new Date(),
         needsNote: true
       });
     } else {
       result = new expenseModel({
         userId,
-        amount: extracted.amount || 0,
-        description: extracted.description,
-        category: extracted.category || "Other",
+        amount,
+        description,
+        category: category || "Other",
         date: new Date(),
         needsNote: true
       });
@@ -520,7 +529,7 @@ export async function scanReceiptImage(req, res) {
     await result.save();
     res.status(201).json({ success: true, message: "Receipt transaction logged", data: result });
   } catch (err) {
-    console.error("scanReceiptImage error:", err);
-    res.status(500).json({ success: false, message: "Server error scanning receipt image" });
+    console.error("scanReceiptImage JSON parse/save error:", err);
+    res.status(500).json({ success: false, message: "Server error parsing receipt JSON" });
   }
 }
