@@ -437,34 +437,51 @@ export async function scanReceiptImage(req, res) {
   const { imageBase64, mimeType = 'image/png' } = req.body;
   let extracted = { amount: 0, description: "Shared Payment Receipt", category: "Other", type: "expense" };
 
-  if (imageBase64 && process.env.GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+  if (imageBase64 && apiKey) {
     try {
       const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { inlineData: { mimeType, data: cleanBase64 } },
-                { text: 'Analyze this transaction screenshot. Extract JSON: {"amount": number, "type": "expense"|"income", "description": "merchant or recipient name string", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
-              ]
-            }]
-          })
+      const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+      let geminiRes = null;
+
+      for (const model of models) {
+        try {
+          const r = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { inlineData: { mimeType, data: cleanBase64 } },
+                    { text: 'Analyze this transaction screenshot carefully. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown formatting: {"amount": 1, "type": "expense", "description": "recipient or merchant name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
+                  ]
+                }]
+              })
+            }
+          );
+          if (r.ok) {
+            geminiRes = r;
+            break;
+          }
+        } catch (mErr) {
+          console.error(`Gemini model ${model} error:`, mErr);
         }
-      );
+      }
 
-      const jsonResult = await geminiRes.json();
-      const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
-      const parsedAi = JSON.parse(cleanedJsonStr);
+      if (geminiRes) {
+        const jsonResult = await geminiRes.json();
+        const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
+        const parsedAi = JSON.parse(cleanedJsonStr);
 
-      if (parsedAi.amount != null) extracted.amount = Number(parsedAi.amount);
-      if (parsedAi.description) extracted.description = parsedAi.description;
-      if (parsedAi.category) extracted.category = parsedAi.category;
-      if (parsedAi.type) extracted.type = parsedAi.type;
+        if (parsedAi.amount != null && !isNaN(parsedAi.amount)) extracted.amount = Number(parsedAi.amount);
+        if (parsedAi.description) extracted.description = String(parsedAi.description).trim();
+        if (parsedAi.category) extracted.category = String(parsedAi.category).trim();
+        if (parsedAi.type) extracted.type = String(parsedAi.type).trim();
+      }
     } catch (gErr) {
       console.error("Gemini receipt scan error:", gErr);
     }
