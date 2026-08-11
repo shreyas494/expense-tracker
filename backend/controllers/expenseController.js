@@ -440,8 +440,8 @@ export async function scanReceiptImage(req, res) {
   }
 
   let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  if (!apiKey || apiKey.startsWith('AQ.')) {
-    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  if (apiKey && apiKey.startsWith('AQ.')) {
+    apiKey = null;
   }
 
   const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');

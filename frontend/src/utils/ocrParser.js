@@ -18,7 +18,7 @@ export function parseTransactionText(text) {
     type = "income";
   }
 
-  // 2. Extract Amount (Handles ₹1, ₹ 1, Rs 1, INR 1, and digits next to ₹)
+  // 2. Extract Amount (Handles ₹1, ₹ 1, Rs 1, INR 1, and standalone numbers near Paid to / Debited from)
   let amount = 0;
   const amountMatches = text.match(/(?:rs\.?|inr|re\.?|₹|\$|€|£)\s*([\d,]+(?:\.\d{1,2})?)/gi);
   if (amountMatches && amountMatches.length > 0) {
@@ -33,7 +33,6 @@ export function parseTransactionText(text) {
   }
 
   if (amount === 0) {
-    // Fallback: look for standalone rupee numbers or digits near Paid to / Debited from
     const standaloneMatch = text.match(/(?:₹|rs\.?|inr)\s*(\d+(?:\.\d{1,2})?)/i) || text.match(/(?:paid to|debited|total|amount)\b[\s\S]*?(\d+(?:\.\d{1,2})?)/i);
     if (standaloneMatch && standaloneMatch[1]) {
       amount = parseFloat(standaloneMatch[1]);
@@ -43,7 +42,7 @@ export function parseTransactionText(text) {
   // 3. Extract Merchant / Recipient Name
   let description = "";
   
-  // Handle multiline PhonePe / GPay receipt screenshots: "Paid to\nUddesh Bhagyawant PICT"
+  // Handle PhonePe multiline layout: "Paid to\nUddesh Bhagyawant PICT"
   const paidToNextLine = text.match(/(?:paid to|sent to|transfer to)\s*[\n\r]+\s*([^\n\r]+)/i);
   if (paidToNextLine && paidToNextLine[1]) {
     description = paidToNextLine[1].trim();
@@ -68,7 +67,6 @@ export function parseTransactionText(text) {
     if (description.includes('@')) {
       description = description.split('@')[0];
     }
-    // Remove amount or currency symbols if attached to name
     description = description.replace(/(?:rs\.?|inr|re\.?|₹)\s*\d+.*/gi, '');
     description = description.replace(/^(using|via|on|for|g pay|phonepe)\s+/i, '');
     description = description.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
@@ -107,14 +105,47 @@ export function parseTransactionText(text) {
   return { type, amount, description, category };
 }
 
+// Invert dark mode screenshot colors for high contrast Tesseract OCR
+async function preprocessDarkScreenshot(imageSource) {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(imageSource);
+
+        ctx.filter = 'invert(100%) grayscale(100%) contrast(150%)';
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas);
+      };
+      img.onerror = () => resolve(imageSource);
+
+      if (typeof imageSource === 'string') {
+        img.src = imageSource;
+      } else if (imageSource instanceof Blob || imageSource instanceof File) {
+        img.src = URL.createObjectURL(imageSource);
+      } else {
+        resolve(imageSource);
+      }
+    } catch (e) {
+      resolve(imageSource);
+    }
+  });
+}
+
 export async function scanReceiptWithOCR(imageSource) {
   let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey || apiKey.startsWith('AQ.')) {
-    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  if (apiKey && apiKey.startsWith('AQ.')) {
+    apiKey = null; // Do not send GCP enterprise AQ. tokens to Generative AI REST endpoint
   }
+
   const debugLog = [];
 
-  if (apiKey) {
+  if (apiKey && apiKey.startsWith('AIzaSy')) {
     debugLog.push(`Gemini Key Found (${apiKey.slice(0, 6)}...)`);
     try {
       let base64Data = '';
@@ -134,19 +165,11 @@ export async function scanReceiptWithOCR(imageSource) {
         for (const model of models) {
           try {
             debugLog.push(`Calling ${model}`);
-            const reqHeaders = {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
-            };
-            if (apiKey.startsWith('AQ.')) {
-              reqHeaders['Authorization'] = `Bearer ${apiKey}`;
-            }
-
             const geminiRes = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
               {
                 method: 'POST',
-                headers: reqHeaders,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{
                     parts: [
@@ -187,14 +210,15 @@ export async function scanReceiptWithOCR(imageSource) {
       debugLog.push(`Gemini error: ${gErr.message}`);
     }
   } else {
-    debugLog.push('VITE_GEMINI_API_KEY missing in environment variables');
+    debugLog.push('Running in-browser High Contrast Canvas OCR');
   }
 
-  // Fallback to Tesseract OCR
+  // Fallback to Canvas Inverted Tesseract OCR
   try {
-    debugLog.push('Running Tesseract OCR');
+    debugLog.push('Running Tesseract OCR (Inverted Dark Mode Canvas)');
+    const processedSource = await preprocessDarkScreenshot(imageSource);
     const worker = await createWorker('eng');
-    const ret = await worker.recognize(imageSource);
+    const ret = await worker.recognize(processedSource);
     await worker.terminate();
 
     const rawText = ret.data.text || '';
