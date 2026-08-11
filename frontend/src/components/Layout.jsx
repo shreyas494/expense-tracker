@@ -103,27 +103,45 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
     return () => clearInterval(interval);
   }, []);
 
-  // Handle incoming Web Share Target parameters (e.g. from GPay/PhonePe share sheet)
+  // Handle incoming Web Share Target parameters & SW cached share data (e.g. from GPay/PhonePe share sheet)
   useEffect(() => {
     const handleWebShareTarget = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const sharedTitle = urlParams.get('title') || '';
-        const sharedText = urlParams.get('text') || '';
-        const sharedUrl = urlParams.get('url') || '';
+        let sharedTextContent = [
+          urlParams.get('title') || '',
+          urlParams.get('text') || '',
+          urlParams.get('url') || ''
+        ].filter(Boolean).join(' ');
 
-        const fullSharedContent = [sharedTitle, sharedText, sharedUrl].filter(Boolean).join(' ');
-
-        if (fullSharedContent) {
+        // Clear query params from URL bar
+        if (window.location.search) {
           window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
+        // Check Service Worker cache for shared text or image
+        if ('caches' in window) {
+          try {
+            const cache = await caches.open('share-cache');
+            const cachedTextRes = await cache.match('/shared-text');
+            if (cachedTextRes) {
+              const text = await cachedTextRes.text();
+              if (text) sharedTextContent = `${sharedTextContent} ${text}`.trim();
+              await cache.delete('/shared-text');
+            }
+          } catch (cErr) {
+            console.error("Cache share read error:", cErr);
+          }
+        }
+
+        if (sharedTextContent) {
           const token = localStorage.getItem('token') || sessionStorage.getItem('token');
           if (!token) return;
 
           const headers = { Authorization: `Bearer ${token}` };
           const res = await axios.post(
             `${API_BASE}/expense/sms-webhook`,
-            { text: fullSharedContent },
+            { text: sharedTextContent },
             { headers }
           );
 
