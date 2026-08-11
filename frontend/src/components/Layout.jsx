@@ -114,6 +114,8 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
           urlParams.get('url') || ''
         ].filter(Boolean).join(' ');
 
+        let imageBlob = null;
+
         // Clear query params from URL bar
         if (window.location.search) {
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -129,22 +131,46 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               if (text) sharedTextContent = `${sharedTextContent} ${text}`.trim();
               await cache.delete('/shared-text');
             }
+
+            const cachedImageRes = await cache.match('/shared-image');
+            if (cachedImageRes) {
+              imageBlob = await cachedImageRes.blob();
+              await cache.delete('/shared-image');
+            }
           } catch (cErr) {
             console.error("Cache share read error:", cErr);
           }
         }
 
-        if (sharedTextContent) {
-          const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-          if (!token) return;
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) return;
 
-          const headers = { Authorization: `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${token}` };
+
+        if (imageBlob) {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64data = reader.result;
+            try {
+              const res = await axios.post(
+                `${API_BASE}/expense/scan-receipt`,
+                { imageBase64: base64data, mimeType: imageBlob.type || 'image/png' },
+                { headers }
+              );
+              if (res.data.success) {
+                fetchPendingNotes();
+              }
+            } catch (iErr) {
+              console.error("Scan receipt error:", iErr);
+            }
+          };
+          reader.readAsDataURL(imageBlob);
+        } else if (sharedTextContent) {
           const res = await axios.post(
             `${API_BASE}/expense/sms-webhook`,
             { text: sharedTextContent },
             { headers }
           );
-
           if (res.data.success) {
             fetchPendingNotes();
           }

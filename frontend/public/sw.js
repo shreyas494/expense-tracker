@@ -18,29 +18,32 @@ self.addEventListener('fetch', (event) => {
     event.respondWith((async () => {
       try {
         const formData = await event.request.formData();
-        const title = formData.get('title') || '';
-        const text = formData.get('text') || '';
-        const sharedUrl = formData.get('url') || '';
-        const media = formData.get('media') || formData.get('images');
-
-        const combinedText = [title, text, sharedUrl].filter(Boolean).join(' ');
-
         const cache = await caches.open(SHARE_CACHE);
 
-        if (combinedText) {
-          await cache.put('/shared-text', new Response(combinedText));
+        let combinedText = '';
+        let imageFile = null;
+
+        for (const [key, value] of formData.entries()) {
+          if (typeof value === 'string') {
+            if (value.trim()) combinedText += ` ${value.trim()}`;
+          } else if (value && typeof value === 'object' && value.size > 0) {
+            imageFile = value;
+          }
         }
 
-        if (media && media.size > 0) {
-          await cache.put('/shared-image', new Response(media, {
-            headers: { 'Content-Type': media.type || 'image/png' }
+        if (combinedText.trim()) {
+          await cache.put('/shared-text', new Response(combinedText.trim()));
+        }
+
+        if (imageFile) {
+          await cache.put('/shared-image', new Response(imageFile, {
+            headers: { 'Content-Type': imageFile.type || 'image/png' }
           }));
         }
 
-        // Redirect client to app home page with shared flag
         return Response.redirect('/?shared=1', 303);
       } catch (err) {
-        console.error("SW Share Target handling failed:", err);
+        console.error("SW Share Target error:", err);
         return Response.redirect('/?shared=error', 303);
       }
     })());

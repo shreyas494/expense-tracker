@@ -10,7 +10,8 @@ import {
   updateExpense,
   addSmsTransaction,
   getPendingNotes,
-  updateSmsTransactionNote
+  updateSmsTransactionNote,
+  scanReceiptImage
 } from '../controllers/expenseController.js';
 
 const expenseRouter = express.Router();
@@ -24,8 +25,9 @@ expenseRouter.get("/downloadexcel",authMiddleware,downloadExpenseExcel);
 expenseRouter.delete("/delete/:id",authMiddleware,deleteExpense);
 expenseRouter.get("/overview",authMiddleware,getExpenseOverview);
 
-// SMS Webhook Routes
+// SMS & Web Share Target Routes
 expenseRouter.post("/sms-webhook", addSmsTransaction);
+expenseRouter.post("/scan-receipt", scanReceiptImage);
 expenseRouter.get("/pending-notes", authMiddleware, getPendingNotes);
 expenseRouter.put("/update-sms-note/:id", authMiddleware, updateSmsTransactionNote);
 

@@ -400,4 +400,77 @@ export async function updateSmsTransactionNote(req, res) {
     console.error("updateSmsTransactionNote error:", error);
     res.status(500).json({ success: false, message: "Server error updating transaction details" });
   }
+}
+
+// Controller to scan image receipt/screenshot via Gemini API or fallback
+export async function scanReceiptImage(req, res) {
+  const userId = req.user ? req.user._id : req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
+  }
+
+  const { imageBase64, mimeType = 'image/png' } = req.body;
+  let extracted = { amount: 0, description: "Shared Payment Receipt", category: "Other", type: "expense" };
+
+  if (imageBase64 && process.env.GEMINI_API_KEY) {
+    try {
+      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inlineData: { mimeType, data: cleanBase64 } },
+                { text: 'Analyze this transaction screenshot. Extract JSON: {"amount": number, "type": "expense"|"income", "description": "merchant or recipient name string", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
+              ]
+            }]
+          })
+        }
+      );
+
+      const jsonResult = await geminiRes.json();
+      const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
+      const parsedAi = JSON.parse(cleanedJsonStr);
+
+      if (parsedAi.amount != null) extracted.amount = Number(parsedAi.amount);
+      if (parsedAi.description) extracted.description = parsedAi.description;
+      if (parsedAi.category) extracted.category = parsedAi.category;
+      if (parsedAi.type) extracted.type = parsedAi.type;
+    } catch (gErr) {
+      console.error("Gemini receipt scan error:", gErr);
+    }
+  }
+
+  try {
+    let result;
+    if (extracted.type === "income") {
+      result = new incomeModel({
+        userId,
+        amount: extracted.amount || 0,
+        description: extracted.description,
+        category: extracted.category || "Salary",
+        date: new Date(),
+        needsNote: true
+      });
+    } else {
+      result = new expenseModel({
+        userId,
+        amount: extracted.amount || 0,
+        description: extracted.description,
+        category: extracted.category || "Other",
+        date: new Date(),
+        needsNote: true
+      });
+    }
+
+    await result.save();
+    res.status(201).json({ success: true, message: "Receipt transaction logged", data: result });
+  } catch (err) {
+    console.error("scanReceiptImage error:", err);
+    res.status(500).json({ success: false, message: "Server error scanning receipt image" });
+  }
 }
