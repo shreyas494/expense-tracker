@@ -2,7 +2,26 @@ import expenseModel from "../models/expenseModel.js";
 import getDateRange from "../utils/dateFilter.js";
 import XLSX from "xlsx";
 import incomeModel from "../models/incomeModel.js";
+import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
+
+function resolveUserId(req) {
+  if (req.user?._id) return req.user._id;
+  if (req.user?.id) return req.user.id;
+  if (req.query?.userId) return req.query.userId;
+  if (req.body?.userId) return req.body.userId;
+
+  const authHeader = req.headers?.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const payload = jwt.verify(token, JWT_SECRET);
+      if (payload?.id) return payload.id;
+    } catch (e) {}
+  }
+  return null;
+}
 
 //add expense
 
@@ -295,7 +314,7 @@ function parseTransactionSMS(text) {
 
 // Controller for SMS / Web Share Target Webhook
 export async function addSmsTransaction(req, res) {
-  const userId = req.user ? req.user._id : req.query.userId;
+  const userId = resolveUserId(req);
   if (!userId) {
     return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
   }
@@ -340,7 +359,10 @@ export async function addSmsTransaction(req, res) {
 
 // Controller to get transactions that need notes
 export async function getPendingNotes(req, res) {
-  const userId = req.user._id;
+  const userId = resolveUserId(req);
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "Authentication required" });
+  }
 
   try {
     const [expenses, incomes] = await Promise.all([
@@ -363,7 +385,10 @@ export async function getPendingNotes(req, res) {
 // Controller to update note/amount/category
 export async function updateSmsTransactionNote(req, res) {
   const { id } = req.params;
-  const userId = req.user._id;
+  const userId = resolveUserId(req);
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "Authentication required" });
+  }
   const { description, category, type, amount } = req.body;
 
   if (!description || !category || !type) {
@@ -404,7 +429,7 @@ export async function updateSmsTransactionNote(req, res) {
 
 // Controller to scan image receipt/screenshot via Gemini API or fallback
 export async function scanReceiptImage(req, res) {
-  const userId = req.user ? req.user._id : req.query.userId;
+  const userId = resolveUserId(req);
   if (!userId) {
     return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
   }
