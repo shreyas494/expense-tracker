@@ -134,6 +134,12 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
               {new Date(transaction.createdAt || transaction.date || Date.now()).toLocaleString()}
             </span>
           </div>
+          {transaction.description && (
+            <div className="text-[10px] font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800/80 p-2 rounded-lg break-all leading-relaxed">
+              <span className="font-bold text-gray-700 dark:text-gray-300">Extracted Text: </span>
+              {transaction.description}
+            </div>
+          )}
         </div>
 
         {/* Edit Form */}

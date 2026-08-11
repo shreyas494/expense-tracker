@@ -109,8 +109,10 @@ export function parseTransactionText(text) {
 
 export async function scanReceiptWithOCR(imageSource) {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const debugLog = [];
 
   if (apiKey) {
+    debugLog.push(`Gemini Key Found (${apiKey.slice(0, 6)}...)`);
     try {
       let base64Data = '';
       if (typeof imageSource === 'string' && imageSource.startsWith('data:image')) {
@@ -128,6 +130,7 @@ export async function scanReceiptWithOCR(imageSource) {
         const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
         for (const model of models) {
           try {
+            debugLog.push(`Calling ${model}`);
             const geminiRes = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
               {
@@ -149,37 +152,63 @@ export async function scanReceiptWithOCR(imageSource) {
               const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
               const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
               const parsedAi = JSON.parse(cleanedJsonStr);
+              debugLog.push(`AI Success: ₹${parsedAi.amount} to ${parsedAi.description}`);
 
               return {
                 success: true,
-                rawText: `Paid to ${parsedAi.description || ''} ₹${parsedAi.amount || 0}`,
+                rawText: `AI: ${parsedAi.description || 'Payment'} ₹${parsedAi.amount || 0}`,
                 amount: Number(parsedAi.amount) || 0,
                 description: parsedAi.description || "Payment Transaction",
                 category: parsedAi.category || "Other",
-                type: parsedAi.type || "expense"
+                type: parsedAi.type || "expense",
+                debug: debugLog.join(' → ')
               };
+            } else {
+              const errTxt = await geminiRes.text();
+              debugLog.push(`Gemini ${model} HTTP ${geminiRes.status}: ${errTxt.slice(0, 120)}`);
             }
           } catch (mErr) {
-            console.error(`Gemini model ${model} error:`, mErr);
+            debugLog.push(`Gemini ${model} err: ${mErr.message}`);
           }
         }
       }
     } catch (gErr) {
-      console.error("Gemini frontend scan error:", gErr);
+      debugLog.push(`Gemini error: ${gErr.message}`);
     }
+  } else {
+    debugLog.push('VITE_GEMINI_API_KEY missing in environment variables');
   }
 
   // Fallback to Tesseract OCR
   try {
+    debugLog.push('Running Tesseract OCR');
     const worker = await createWorker('eng');
     const ret = await worker.recognize(imageSource);
     await worker.terminate();
 
     const rawText = ret.data.text || '';
+    debugLog.push(`Tesseract raw text length: ${rawText.length}`);
     const parsed = parseTransactionText(rawText);
-    return { success: true, rawText, ...parsed };
+
+    if (parsed.amount === 0) {
+      debugLog.push('Tesseract found text but could not parse amount > 0');
+    }
+
+    return {
+      success: true,
+      rawText: rawText || 'No text recognized',
+      ...parsed,
+      debug: debugLog.join(' → ')
+    };
   } catch (err) {
-    console.error("In-browser OCR failed:", err);
-    return { success: false, amount: 0, description: "Shared Payment Receipt", category: "Other", type: "expense" };
+    debugLog.push(`Tesseract failed: ${err.message}`);
+    return {
+      success: false,
+      amount: 0,
+      description: "Shared Payment Receipt",
+      category: "Other",
+      type: "expense",
+      debug: debugLog.join(' → ')
+    };
   }
 }
