@@ -120,7 +120,11 @@ async function preprocessDarkScreenshot(imageSource) {
 
         ctx.filter = 'invert(100%) grayscale(100%) contrast(150%)';
         ctx.drawImage(img, 0, 0);
-        resolve(canvas);
+        try {
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          resolve(imageSource);
+        }
       };
       img.onerror = () => resolve(imageSource);
 
@@ -139,8 +143,8 @@ async function preprocessDarkScreenshot(imageSource) {
 
 export async function scanReceiptWithOCR(imageSource) {
   let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey || apiKey.startsWith('AQ.')) {
-    apiKey = 'AIzaSyA_LspGJzzqs431_Cj4vMG9HgTO6WL8kGU';
+  if (apiKey && apiKey.startsWith('AQ.')) {
+    apiKey = null;
   }
 
   const debugLog = [];
