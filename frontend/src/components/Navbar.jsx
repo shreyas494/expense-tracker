@@ -125,17 +125,11 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     <header className={navbarStyles.header}>
         <div className={navbarStyles.container}>
             {/* logo */}
-            <div onClick={() => navigate("/")} 
-            className={navbarStyles.logoContainer}>
+            <div onClick={() => navigate("/")} className={navbarStyles.logoContainer}>
                 <div className={navbarStyles.logoImage}>
-                    <img src={img1} alt="logo" className={navbarStyles.logo}/>
-
-
+                    <img src={img1} alt="Expense Tracker Logo" className={navbarStyles.logo}/>
                 </div>
-
                 <span className={navbarStyles.logoText}>Expense Tracker</span>
-
-            
             </div>
 
             {/* if the user is present */}
@@ -151,7 +145,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-3 py-2 text-xs font-bold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20"
+                    className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs"
                     title="Upload & Scan Receipt Screenshot"
                   >
                     <Camera className="w-4 h-4" />
@@ -160,10 +154,10 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
                   <button
                     onClick={toggleTheme}
-                    className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer flex items-center justify-center"
+                    className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
                     title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   >
-                    {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-700" />}
+                    {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
                   </button>
 
                   <div className={navbarStyles.userContainer} ref={menuRef}>
@@ -178,8 +172,8 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   </div>
 
                   <div className={navbarStyles.userTextContainer}>
-                    <p className={navbarStyles.userName}>{user?.name || "User"}</p>
-                    <p className={navbarStyles.userEmail}>{user?.email || "user@expensetracker.com"}</p>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate max-w-[130px]">{user?.name || "User"}</p>
+                    <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-300 truncate max-w-[130px]">{user?.email || "user@expensetracker.com"}</p>
                   </div>
                 </div>
 

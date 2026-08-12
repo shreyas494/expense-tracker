@@ -108,14 +108,14 @@ initial={{x: -100, opacity: 0}} animate ={{
     x:0,
     opacity:1,
     width: isCollapsed ? 80 : 256,
-}} transition={{type: "spring", damping:25}}
+}} transition={{ duration: 0.18, ease: "easeOut" }}
 >
 <div className={sidebarStyles.sidebarInner.base}>
     <button onClick={toggleSidebar} className={sidebarStyles.toggleButton.base}>
     <motion.div
               initial={{ rotate: 0 }}
               animate={{ rotate: isCollapsed ? 0 : 180 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.15 }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points={isCollapsed ? "9 18 15 12 9 6" : "15 18 9 12 15 6"}></polyline>

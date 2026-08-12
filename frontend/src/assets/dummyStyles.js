@@ -525,11 +525,11 @@ export const styles = {
     grid: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6",
     card: "bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800",
     cardHeader: "flex justify-between items-start",
-    cardTitle: "text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400",
-    cardValue: "text-2xl font-extrabold text-slate-900 dark:text-white mt-1",
+    cardTitle: "text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300",
+    cardValue: "text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight",
     iconContainer: (color) => `p-2.5 rounded-xl bg-${color}-500/10 text-${color}-600 dark:text-${color}-400 shrink-0`,
     icon: (color) => `w-5 h-5 text-${color}-600 dark:text-${color}-400`,
-    cardFooter: "text-xs font-medium text-slate-500 dark:text-slate-400 mt-2",
+    cardFooter: "text-xs font-semibold text-slate-500 dark:text-slate-300 mt-2",
   },
 
   grid: {

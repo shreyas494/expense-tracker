@@ -4,7 +4,7 @@ import Navbar from './Navbar'
 import  Sidebar  from './Sidebar'
 import { useState } from 'react'
 import { Activity, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, IndianRupee, Gift, Home, Info, PieChart, PiggyBank, RefreshCcw, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap, Search } from 'lucide-react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import SmsPromptModal from './SmsPromptModal'
 import { AnimatePresence } from 'framer-motion'
@@ -57,7 +57,7 @@ const safeArrayFromResponse = (res) => {
 };
 
 const Layout = ({onLogout, user, onUserUpdate}) =>{
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
   useEffect(() => {
     if (theme === "dark") {
@@ -447,22 +447,35 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
     [transactions]
   );
 
+  const location = useLocation();
+  const pageMeta = useMemo(() => {
+    const p = location.pathname;
+    if (p === '/income') return { title: 'Income', subtitle: 'Manage and track your income streams' };
+    if (p === '/expense') return { title: 'Expenses', subtitle: 'Track and analyze your daily expenses' };
+    if (p === '/borrow-lend') return { title: 'Borrow & Lend', subtitle: 'Manage personal debts, loans, and repayments' };
+    if (p === '/challenges') return { title: 'Savings Challenges', subtitle: 'Gamify savings, build streaks & unlock badges' };
+    if (p === '/reports') return { title: 'Financial Reports', subtitle: 'Export statement reports & setup SMS webhooks' };
+    if (p === '/profile') return { title: 'Account Profile', subtitle: 'Manage your user credentials and security' };
+    return { title: 'Dashboard', subtitle: 'Welcome back' };
+  }, [location.pathname]);
+
   const displayedTransactions = showAllTransactions
     ? searchedTransactions
     : searchedTransactions.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100 flex flex-col font-sans antialiased transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased transition-colors duration-300">
     <Navbar user={user} onLogout={onLogout} theme={theme} toggleTheme={toggleTheme}/>
     <Sidebar user={user} isCollapsed={sidebarCollapsed} setIsCollapsed={setSidebarCollapsed}/>
     <div className={styles.layout.mainContainer(sidebarCollapsed)}>
       <div className={styles.header.container}>
           <div>
-            <h1 className={styles.header.title}>
-            Dashboard
-
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {pageMeta.title}
             </h1>
-            <p className={styles.header.subtitle}> Welcome back </p>
+            <p className="text-slate-500 dark:text-slate-300 text-xs md:text-sm font-semibold mt-1">
+              {pageMeta.subtitle}
+            </p>
           </div>
       </div>
 
@@ -579,9 +592,9 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
           <div className={styles.cards.base}>
               <div className={styles.cards.header}>
                 <h3 className={styles.cards.title}>
-                <TrendingUp className="w-6 h-6 text-teal-500"/>
-                    financial overview 
-                    <span className="text-sm text-gray-500 font-normal">
+                <TrendingUp className="w-5 h-5 text-teal-500"/>
+                    Financial Overview 
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold ml-1">
                       ({timeFrameLabel})
                     </span>
                 </h3>
@@ -596,7 +609,7 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
           <div className={styles.cards.base}>
               <div className={styles.transactions.cardHeader}>
                   <h3 className={styles.transactions.cardTitle}>
-                        <Clock className="w-6 h-6 text-purple-600"/>
+                        <Clock className="w-5 h-5 text-teal-500 dark:text-teal-400"/>
                         Recent Transactions
                   </h3>
                   <button onClick={fetchTransactions} disabled={loading}
@@ -608,14 +621,14 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               </div>
 
               {/* Search Bar for Recent Transactions */}
-              <div className="px-5 mb-4 relative">
-                <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="mb-4 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search recent transactions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                 />
               </div>
 

@@ -370,25 +370,25 @@ const ChallengesPage = () => {
         </div>
       </div>
 
-      {/* MODAL: CREATE CHALLENGE */}
+      {/* ADD NEW CHALLENGE MODAL */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative border border-gray-100"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl relative border border-slate-200/80 dark:border-slate-800 z-10"
             >
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800">Start Savings Challenge</h3>
-                <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 text-gray-500 rounded-full cursor-pointer">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Start Savings Challenge</h3>
+                <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl transition-colors cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-150 text-red-700 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="mt-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -396,11 +396,11 @@ const ChallengesPage = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Challenge Type</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Challenge Type</label>
                   <select
                     value={challengeType}
                     onChange={(e) => setChallengeType(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                   >
                     <option value="daily_save">Daily Save Milestone (e.g. Save ₹100/day)</option>
                     <option value="category_fast">Category Spending Fast (e.g. No Food Delivery)</option>
@@ -409,21 +409,21 @@ const ChallengesPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Title</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Title</label>
                   <input
                     type="text"
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter custom title..."
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700"
+                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                   />
                 </div>
 
                 {challengeType !== 'category_fast' ? (
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                      {challengeType === 'daily_save' ? 'Target Savings Amount per day (Rs)' : 'Target Spend Limit (Rs)'}
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">
+                      {challengeType === 'daily_save' ? 'Target Savings Amount per day (₹)' : 'Target Spend Limit (₹)'}
                     </label>
                     <input
                       type="number"
@@ -432,22 +432,22 @@ const ChallengesPage = () => {
                       value={targetValue}
                       onChange={(e) => setTargetValue(e.target.value)}
                       placeholder="e.g. 100, 5000"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700"
+                      className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                     />
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Forbidden Category</label>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Forbidden Category</label>
                     <select
                       value={categoryLimit}
                       onChange={(e) => setCategoryLimit(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                     >
                       {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                     {/* For category_fast, targetValue represents days of fast */}
                     <div className="mt-3">
-                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Duration Target (Days)</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Duration Target (Days)</label>
                       <input
                         type="number"
                         required
@@ -455,7 +455,7 @@ const ChallengesPage = () => {
                         value={targetValue}
                         onChange={(e) => setTargetValue(e.target.value)}
                         placeholder="e.g. 7"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                       />
                     </div>
                   </div>
@@ -463,36 +463,36 @@ const ChallengesPage = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Start Date</label>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Start Date</label>
                     <input
                       type="date"
                       required
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">End Date</label>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">End Date</label>
                     <input
                       type="date"
                       required
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Description (Optional)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Description (Optional)</label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g. Saving for PG rent, cutting down fast food..."
                     rows="2"
-                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 font-medium"
+                    className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                   />
                 </div>
 
@@ -500,14 +500,14 @@ const ChallengesPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 cursor-pointer"
+                    className="px-5 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-extrabold rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow-md disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs shadow-sm disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {submitting ? 'Starting...' : 'Start Challenge'}
                   </button>

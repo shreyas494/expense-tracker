@@ -564,27 +564,27 @@ const BorrowLendPage = () => {
       {/* RECORD ADD/EDIT MODAL */}
       <AnimatePresence>
         {isRecordModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl border border-gray-100 relative"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10"
             >
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
                   {recordId ? 'Edit Ledger Entry' : 'New Ledger Entry'}
                 </h3>
                 <button 
                   onClick={() => setIsRecordModalOpen(false)}
-                  className="p-1 hover:bg-gray-100 text-gray-500 rounded-full cursor-pointer"
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {recordError && (
-                <div className="mt-4 p-3.5 bg-red-50 border border-red-150 text-red-700 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="mt-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{recordError}</span>
                 </div>
@@ -592,15 +592,15 @@ const BorrowLendPage = () => {
 
               <form onSubmit={handleRecordSubmit} className="space-y-4 mt-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Entry Type</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Entry Type</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setFormType('borrow')}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      className={`py-2.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
                         formType === 'borrow'
-                          ? 'bg-red-50 text-red-700 border-red-200'
-                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
                       Money I Borrowed
@@ -608,10 +608,10 @@ const BorrowLendPage = () => {
                     <button
                       type="button"
                       onClick={() => setFormType('lend')}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      className={`py-2.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
                         formType === 'lend'
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
                       Money I Lent
@@ -620,24 +620,24 @@ const BorrowLendPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Contact Person</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Contact Person</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
                       required
                       value={person}
                       onChange={(e) => setPerson(e.target.value)}
                       placeholder="Enter contact name..."
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Amount (Rs)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Amount (₹)</label>
                   <div className="relative">
-                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="number"
                       required
@@ -645,46 +645,46 @@ const BorrowLendPage = () => {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Record Date</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Record Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="date"
                       required
                       value={recordDate}
                       onChange={(e) => setRecordDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Due Date (Optional)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Due Date (Optional)</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="date"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Description (Optional)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Description (Optional)</label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g. For dinner, office loan..."
                     rows="2"
-                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                    className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                   />
                 </div>
 
@@ -692,14 +692,14 @@ const BorrowLendPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsRecordModalOpen(false)}
-                    className="px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 cursor-pointer"
+                    className="px-5 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-extrabold rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submittingRecord}
-                    className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow-md disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs shadow-sm disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {submittingRecord ? 'Saving...' : 'Save Entry'}
                   </button>
@@ -713,25 +713,25 @@ const BorrowLendPage = () => {
       {/* REPAYMENTS HISTORY & FORM MODAL */}
       <AnimatePresence>
         {isRepaymentModalOpen && selectedRecord && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl border border-gray-100 relative"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10"
             >
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
                     Repayment Ledger: {selectedRecord.person}
                   </h3>
-                  <p className="text-xs text-gray-500">
-                    Outstanding Balance: <span className="font-semibold text-teal-600">₹{selectedRecord.remainingAmount.toLocaleString('en-IN')}</span> / ₹{selectedRecord.amount.toLocaleString('en-IN')}
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-0.5">
+                    Outstanding Balance: <span className="font-extrabold text-teal-600 dark:text-teal-400">₹{selectedRecord.remainingAmount.toLocaleString('en-IN')}</span> / ₹{selectedRecord.amount.toLocaleString('en-IN')}
                   </p>
                 </div>
                 <button 
                   onClick={() => setIsRepaymentModalOpen(false)}
-                  className="p-1 hover:bg-gray-100 text-gray-500 rounded-full cursor-pointer"
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -742,19 +742,19 @@ const BorrowLendPage = () => {
                 
                 {/* Column 1: Repayments History */}
                 <div>
-                  <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-1.5">
                     <History className="w-3.5 h-3.5" />
                     Payment History
                   </h4>
                   <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                     {selectedRecord.payments.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic py-4">No payments recorded yet.</p>
+                      <p className="text-xs text-slate-400 font-semibold italic py-4">No payments recorded yet.</p>
                     ) : (
                       selectedRecord.payments.map((p) => (
                         <div key={p._id} className={borrowLendStyles.repaymentItem}>
                           <div>
-                            <span className="font-bold text-gray-700">₹{p.amount.toLocaleString('en-IN')}</span>
-                            <span className="text-[10px] text-gray-400 block">
+                            <span className="font-extrabold text-slate-900 dark:text-white">₹{p.amount.toLocaleString('en-IN')}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                               {new Date(p.date).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
                             </span>
                             {p.notes && <span className={borrowLendStyles.repaymentNotes}>{p.notes}</span>}
@@ -762,7 +762,7 @@ const BorrowLendPage = () => {
                           {selectedRecord.status !== 'settled' && (
                             <button
                               onClick={() => handleDeleteRepayment(p._id)}
-                              className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded cursor-pointer"
+                              className="p-1 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded cursor-pointer"
                               title="Delete repayment entry"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -775,29 +775,29 @@ const BorrowLendPage = () => {
                 </div>
 
                 {/* Column 2: New Payment Form */}
-                <div className="border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6">
+                <div className="border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 pt-6 md:pt-0 md:pl-6">
                   {selectedRecord.status === 'settled' ? (
-                    <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center flex flex-col items-center justify-center h-full">
-                      <CheckCircle2 className="w-8 h-8 text-green-600 mb-2" />
-                      <p className="text-sm font-bold text-green-800">Fully Settled</p>
-                      <p className="text-[11px] text-green-600 mt-1">This ledger is completed and no outstanding balance remains.</p>
+                    <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-center flex flex-col items-center justify-center h-full">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
+                      <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">Fully Settled</p>
+                      <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1">This ledger is completed and no balance remains.</p>
                     </div>
                   ) : (
                     <div>
-                      <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">
                         Log Payment
                       </h4>
                       {repayError && (
-                        <div className="mb-3 p-2.5 bg-red-50 border border-red-150 text-red-700 rounded-lg text-[11px] font-semibold flex items-center gap-1.5">
+                        <div className="mb-3 p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-[11px] font-bold flex items-center gap-1.5">
                           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                           <span>{repayError}</span>
                         </div>
                       )}
                       <form onSubmit={handleRepaySubmit} className="space-y-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Amount (Rs)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Amount (₹)</label>
                           <div className="relative">
-                            <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                            <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                             <input
                               type="number"
                               required
@@ -806,30 +806,30 @@ const BorrowLendPage = () => {
                               value={repayAmount}
                               onChange={(e) => setRepayAmount(e.target.value)}
                               placeholder="0.00"
-                              className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                              className="w-full pl-8 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Payment Date</label>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Payment Date</label>
                           <input
                             type="date"
                             required
                             value={repayDate}
                             onChange={(e) => setRepayDate(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Notes (Optional)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Notes (Optional)</label>
                           <input
                             type="text"
                             value={repayNotes}
                             onChange={(e) => setRepayNotes(e.target.value)}
                             placeholder="Installment payment..."
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                           />
                         </div>
 
@@ -837,14 +837,14 @@ const BorrowLendPage = () => {
                           <button
                             type="button"
                             onClick={handleQuickSettle}
-                            className="w-full py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg text-xs shadow-sm cursor-pointer transition-all active:scale-[0.98]"
+                            className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs shadow-xs cursor-pointer transition-all active:scale-[0.98]"
                           >
                             Quick Settle
                           </button>
                           <button
                             type="submit"
                             disabled={submittingRepay}
-                            className="w-full py-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-lg text-xs shadow-sm disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
+                            className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs shadow-xs disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                           >
                             {submittingRepay ? 'Saving...' : 'Add Repay'}
                           </button>
