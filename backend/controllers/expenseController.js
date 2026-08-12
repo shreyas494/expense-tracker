@@ -491,7 +491,7 @@ export async function scanReceiptImage(req, res) {
   }
 
   const defaultGeminiKey = (typeof Buffer !== 'undefined')
-    ? Buffer.from('QVEuQWI4Uk42STJhcDVUZk5GaU1BOGtfTk1MckVxSzVlUHZ6T1Rqal8yMnNkV1ZEb0s0d0E=', 'base64').toString('utf-8')
+    ? Buffer.from('QVEuQWI4Uk42S0FENTdsUFlXR1Q3cWp3QW8wNWVMNWZLQTN2VUZYdlVaWnJsU2swWVYycEE=', 'base64').toString('utf-8')
     : '';
 
   let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || defaultGeminiKey;
@@ -503,12 +503,9 @@ export async function scanReceiptImage(req, res) {
         const reqHeaders = { 'Content-Type': 'application/json' };
         if (apiKey.startsWith('AQ.')) {
           reqHeaders['x-goog-api-key'] = apiKey;
-          reqHeaders['x-goog-user-project'] = '764783178426';
         }
 
-        const fetchUrl = apiKey.startsWith('AQ.')
-          ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-          : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
         const r = await fetch(fetchUrl, {
           method: 'POST',
@@ -521,6 +518,7 @@ export async function scanReceiptImage(req, res) {
               ]
             }]
           })
+        });
         if (r.ok) {
           const jsonResult = await r.json();
           const rawText = jsonResult?.candidates?.[0]?.content?.parts?.[0]?.text || '';
