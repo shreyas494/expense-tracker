@@ -150,24 +150,46 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
         const headers = { Authorization: `Bearer ${token}` };
 
         if (imageBlob) {
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const base64data = reader.result;
-            try {
-              const res = await axios.post(
-                `${API_BASE}/expense/scan-receipt`,
-                { imageBase64: base64data, mimeType: imageBlob.type || 'image/png' },
-                { headers }
-              );
-              if (res.data.success) {
+          try {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              const base64data = reader.result;
+              try {
+                const res = await axios.post(
+                  `${API_BASE}/expense/scan-receipt`,
+                  { imageBase64: base64data, mimeType: imageBlob.type || 'image/png' },
+                  { headers }
+                );
+
+                if (res.data.success && res.data.data?.amount > 0) {
+                  fetchPendingNotes();
+                  return;
+                }
+              } catch (iErr) {
+                console.error("Backend scan receipt error:", iErr);
+              }
+
+              // Fallback to client-side OCR if backend scan returns 0 or fails
+              try {
+                const ocrResult = await scanReceiptWithOCR(imageBlob);
+                if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
+                  const textToSubmit = ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}`;
+                  await axios.post(
+                    `${API_BASE}/expense/sms-webhook`,
+                    { text: textToSubmit },
+                    { headers }
+                  );
+                }
+              } catch (cErr) {
+                console.error("Client OCR share fallback error:", cErr);
+              } finally {
                 fetchPendingNotes();
               }
-            } catch (iErr) {
-              console.error("Scan receipt error:", iErr);
-              fetchPendingNotes();
-            }
-          };
-          reader.readAsDataURL(imageBlob);
+            };
+            reader.readAsDataURL(imageBlob);
+          } catch (blobErr) {
+            console.error("Image blob read error:", blobErr);
+          }
         } else if (sharedTextContent || isSharePath) {
           const textToSubmit = sharedTextContent || "Shared Payment Receipt";
           const res = await axios.post(
