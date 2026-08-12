@@ -357,7 +357,6 @@ export async function addSmsTransaction(req, res) {
   }
 }
 
-// Controller to get transactions that need notes
 export async function getPendingNotes(req, res) {
   const userId = resolveUserId(req);
   if (!userId) {
@@ -365,6 +364,10 @@ export async function getPendingNotes(req, res) {
   }
 
   try {
+    // Auto-clean old 0-rupee dummy pending notes
+    await expenseModel.deleteMany({ userId, needsNote: true, amount: 0, description: "Payment Transaction" });
+    await expenseModel.deleteMany({ userId, needsNote: true, amount: 0, description: "Shared Payment Receipt" });
+
     const [expenses, incomes] = await Promise.all([
       expenseModel.find({ userId, needsNote: true }).lean(),
       incomeModel.find({ userId, needsNote: true }).lean()
@@ -532,7 +535,7 @@ export async function scanReceiptImage(req, res) {
             category: parsed.category || "Other",
             type: parsed.type || "expense",
             date: new Date(),
-            needsNote: false
+            needsNote: true
           });
           await newExpense.save();
           return res.status(200).json({ success: true, message: "Gemini Vision receipt parsed successfully", data: newExpense });
