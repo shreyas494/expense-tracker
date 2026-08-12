@@ -437,9 +437,13 @@ export async function scanReceiptImage(req, res) {
     return res.status(400).json({ success: false, message: "userId parameter or authentication token is required" });
   }
 
-  const { imageBase64, mimeType = 'image/png' } = req.body;
+  let { imageBase64, mimeType = 'image/png' } = req.body;
   if (!imageBase64) {
     return res.status(400).json({ success: false, message: "No image provided" });
+  }
+
+  if (!mimeType || mimeType === 'application/octet-stream') {
+    mimeType = 'image/png';
   }
 
   const defaultOpenAiKey = (typeof Buffer !== 'undefined')
