@@ -39,9 +39,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                 { headers }
               );
 
-              if (res.data.success && res.data.data?.amount > 0) {
-                alert(`Receipt Scanned Successfully!\nPaid ₹${res.data.data.amount} to ${res.data.data.description}`);
-              } else {
+              if (!res.data.success || !res.data.data?.amount) {
                 const ocrResult = await scanReceiptWithOCR(file);
                 if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
                   await axios.post(

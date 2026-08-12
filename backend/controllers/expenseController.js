@@ -535,7 +535,7 @@ export async function scanReceiptImage(req, res) {
             category: parsed.category || "Other",
             type: parsed.type || "expense",
             date: new Date(),
-            needsNote: false
+            needsNote: true
           });
           await newExpense.save();
           return res.status(200).json({ success: true, message: "Gemini Vision receipt parsed successfully", data: newExpense });
