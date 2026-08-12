@@ -8,8 +8,7 @@ import { Outlet } from 'react-router-dom'
 import axios from 'axios'
 import SmsPromptModal from './SmsPromptModal'
 import { AnimatePresence } from 'framer-motion'
-import { scanReceiptWithOCR } from '../utils/ocrParser'
-
+import { scanReceiptWithOCR, compressImageForMobile } from '../utils/ocrParser'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 const CATEGORY_ICONS = {
@@ -151,13 +150,12 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
 
         if (imageBlob) {
           try {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-              const base64data = reader.result;
+            const compressedBase64 = await compressImageForMobile(imageBlob);
+            if (compressedBase64) {
               try {
                 const res = await axios.post(
                   `${API_BASE}/expense/scan-receipt`,
-                  { imageBase64: base64data, mimeType: imageBlob.type || 'image/png' },
+                  { imageBase64: compressedBase64, mimeType: 'image/jpeg' },
                   { headers }
                 );
 
@@ -168,25 +166,24 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               } catch (iErr) {
                 console.error("Backend scan receipt error:", iErr);
               }
+            }
 
-              // Fallback to client-side OCR if backend scan returns 0 or fails
-              try {
-                const ocrResult = await scanReceiptWithOCR(imageBlob);
-                if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
-                  const textToSubmit = ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}`;
-                  await axios.post(
-                    `${API_BASE}/expense/sms-webhook`,
-                    { text: textToSubmit },
-                    { headers }
-                  );
-                }
-              } catch (cErr) {
-                console.error("Client OCR share fallback error:", cErr);
-              } finally {
-                fetchPendingNotes();
+            // Fallback to client-side OCR if backend scan returns 0 or fails
+            try {
+              const ocrResult = await scanReceiptWithOCR(imageBlob);
+              if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
+                const textToSubmit = ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}`;
+                await axios.post(
+                  `${API_BASE}/expense/sms-webhook`,
+                  { text: textToSubmit },
+                  { headers }
+                );
               }
-            };
-            reader.readAsDataURL(imageBlob);
+            } catch (cErr) {
+              console.error("Client OCR share fallback error:", cErr);
+            } finally {
+              fetchPendingNotes();
+            }
           } catch (blobErr) {
             console.error("Image blob read error:", blobErr);
           }

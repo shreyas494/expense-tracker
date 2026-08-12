@@ -105,6 +105,54 @@ export function parseTransactionText(text) {
   return { type, amount, description, category };
 }
 
+// Compress high-res mobile screenshots/photos to < 300KB before uploading to Vercel
+export async function compressImageForMobile(imageSource, maxDimension = 1024, quality = 0.8) {
+  return new Promise((resolve) => {
+    try {
+      const processBase64 = (base64Str) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(base64Str);
+
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(base64Str);
+        img.src = base64Str;
+      };
+
+      if (typeof imageSource === 'string') {
+        processBase64(imageSource);
+      } else if (imageSource instanceof Blob || imageSource instanceof File) {
+        const reader = new FileReader();
+        reader.onloadend = () => processBase64(reader.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(imageSource);
+      } else {
+        resolve(null);
+      }
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
 // Invert dark mode screenshot colors for high contrast Tesseract OCR via FileReader
 async function preprocessDarkScreenshot(imageSource) {
   return new Promise((resolve) => {
