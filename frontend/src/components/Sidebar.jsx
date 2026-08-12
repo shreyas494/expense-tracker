@@ -139,10 +139,10 @@ initial={{x: -100, opacity: 0}} animate ={{
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                 >
-                    <h2 className="text-sm font-bold text-gray-800 truncate">
+                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                         {username}
                     </h2>
-                    <p className='text-xs text-gray-500 truncate'>
+                    <p className='text-xs text-slate-500 dark:text-slate-300 truncate'>
                         {email}
                     </p>
                 </motion.div>
@@ -170,7 +170,7 @@ initial={{x: -100, opacity: 0}} animate ={{
     )} to="https://www.hexagondigitalservices.com/contact"
     
     >
-    <HelpCircle size={20} className="text-gray-500"/>
+    <HelpCircle size={20} className="text-slate-400 dark:text-slate-400"/>
     {!isCollapsed && <span>Support</span>}
 
     </Link>
@@ -180,7 +180,7 @@ initial={{x: -100, opacity: 0}} animate ={{
         isCollapsed && sidebarStyles.logoutButton.collapsed
     )}>
 
-    <LogOut size={20} className="text-gray-500"/>
+    <LogOut size={20} className="text-slate-400 dark:text-slate-400"/>
     { !isCollapsed && <span>Logout</span> }
 
     </button>
@@ -228,17 +228,17 @@ whileTap={{scale: 0.95}}
                         {initial}
                      </div>
                      <div>
-                        <h2 className='text-lg font-bold text-gray-800'>
+                        <h2 className='text-base font-extrabold text-slate-900 dark:text-white'>
                           {username}
                         </h2>
-                        <p className='text-sm text-gray-500'>{email}</p>
+                        <p className='text-xs text-slate-500 dark:text-slate-300'>{email}</p>
 
                      </div>
                   </div>
                   <button onClick={() => setMobileOpen(false)}
                   className={sidebarStyles.mobileCloseButton}
                   >
-                  <X size={24} className='text-gray-600'/>
+                  <X size={24} className='text-slate-400'/>
 
                   </button>
                 </div>

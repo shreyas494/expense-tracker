@@ -137,46 +137,46 @@ const Dashboard = () => {
 
       {/* Mini Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
             <span>Total Income</span>
           </div>
-          <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
+          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
             ₹{metrics.income.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <TrendingDown className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
+        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <TrendingDown className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
             <span>Total Expenses</span>
           </div>
-          <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
+          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
             ₹{metrics.expenses.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
             {metrics.savings >= 0 ? (
-              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
             ) : (
-              <ArrowDownRight className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
+              <ArrowDownRight className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
             )}
             <span>Net Savings</span>
           </div>
-          <p className={`text-xl font-extrabold mt-1 ${metrics.savings >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+          <p className={`text-xl md:text-2xl font-extrabold mt-1.5 tracking-tight ${metrics.savings >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
             ₹{metrics.savings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <Percent className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
+        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <Percent className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400 shrink-0" />
             <span>Savings Rate</span>
           </div>
-          <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
+          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
             {metrics.savingsRate}%
           </p>
         </div>
@@ -186,28 +186,28 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link to="/borrow-lend" className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between hover:border-rose-500/30 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <div className="p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
               <ArrowDownRight className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Outstanding Debt (You Borrowed)</p>
-              <p className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">₹{borrowLendOverview.totalBorrowed.toLocaleString('en-IN')}</p>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Outstanding Debt (You Borrowed)</p>
+              <p className="text-lg md:text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">₹{borrowLendOverview.totalBorrowed.toLocaleString('en-IN')}</p>
             </div>
           </div>
-          <span className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">Manage &rarr;</span>
+          <span className="text-xs font-extrabold text-teal-600 dark:text-teal-400 hover:underline">Manage &rarr;</span>
         </Link>
 
         <Link to="/borrow-lend" className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between hover:border-emerald-500/30 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
               <ArrowUpRight className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Outstanding Receivables (You Lent)</p>
-              <p className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">₹{borrowLendOverview.totalLent.toLocaleString('en-IN')}</p>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Outstanding Receivables (You Lent)</p>
+              <p className="text-lg md:text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">₹{borrowLendOverview.totalLent.toLocaleString('en-IN')}</p>
             </div>
           </div>
-          <span className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">Manage &rarr;</span>
+          <span className="text-xs font-extrabold text-teal-600 dark:text-teal-400 hover:underline">Manage &rarr;</span>
         </Link>
       </div>
 

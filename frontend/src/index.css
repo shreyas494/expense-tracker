@@ -140,5 +140,77 @@ input:focus, select:focus, textarea:focus {
 }
 
 .dark input::placeholder, .dark textarea::placeholder {
-  color: #64748b !important;
+  color: #94a3b8 !important;
+}
+
+/* Global Typography Token Utilities */
+.text-app-primary {
+  color: var(--text-primary);
+}
+
+.text-app-secondary {
+  color: var(--text-secondary);
+}
+
+.text-app-muted {
+  color: var(--text-muted);
+}
+
+.heading-page {
+  font-size: 1.875rem; /* 30px */
+  line-height: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .heading-page {
+    font-size: 2.25rem; /* 36px */
+    line-height: 2.5rem;
+  }
+}
+
+.heading-section {
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .heading-section {
+    font-size: 1.5rem; /* 24px */
+    line-height: 2rem;
+  }
+}
+
+.heading-card {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .heading-card {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.75rem;
+  }
+}
+
+.financial-amount {
+  font-size: 1.75rem; /* 28px */
+  line-height: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .financial-amount {
+    font-size: 2.25rem; /* 36px */
+    line-height: 2.5rem;
+  }
 }
