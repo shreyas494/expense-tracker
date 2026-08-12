@@ -147,12 +147,74 @@ async function preprocessDarkScreenshot(imageSource) {
 }
 
 export async function scanReceiptWithOCR(imageSource) {
+  const debugLog = [];
+  const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+  if (openAiKey && openAiKey.startsWith('sk-')) {
+    debugLog.push(`OpenAI Key Found (${openAiKey.slice(0, 6)}...)`);
+    try {
+      let base64Data = '';
+      if (typeof imageSource === 'string' && imageSource.startsWith('data:image')) {
+        base64Data = imageSource;
+      } else if (imageSource instanceof Blob || imageSource instanceof File) {
+        base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageSource);
+        });
+      }
+
+      if (base64Data) {
+        const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openAiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Analyze this UPI/bank payment receipt screenshot. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "merchant or person name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' },
+                { type: 'image_url', image_url: { url: base64Data } }
+              ]
+            }],
+            max_tokens: 300
+          })
+        });
+
+        if (oaiRes.ok) {
+          const jsonResult = await oaiRes.json();
+          const rawText = jsonResult?.choices?.[0]?.message?.content || '';
+          const cleanedJsonStr = rawText.replace(/```json|```/g, '').trim();
+          const parsedAi = JSON.parse(cleanedJsonStr);
+          debugLog.push(`OpenAI Vision Success: ₹${parsedAi.amount} to ${parsedAi.description}`);
+
+          return {
+            success: true,
+            rawText: `AI: ${parsedAi.description || 'Payment'} ₹${parsedAi.amount || 0}`,
+            amount: Number(parsedAi.amount) || 0,
+            description: parsedAi.description || "Payment Transaction",
+            category: parsedAi.category || "Other",
+            type: parsedAi.type || "expense",
+            debug: debugLog.join(' → ')
+          };
+        } else {
+          const errTxt = await oaiRes.text();
+          debugLog.push(`OpenAI HTTP ${oaiRes.status}: ${errTxt.slice(0, 100)}`);
+        }
+      }
+    } catch (oErr) {
+      debugLog.push(`OpenAI Vision error: ${oErr.message}`);
+    }
+  }
+
   let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (apiKey && apiKey.startsWith('AQ.')) {
     apiKey = null;
   }
-
-  const debugLog = [];
 
   if (apiKey && apiKey.startsWith('AIzaSy')) {
     debugLog.push(`Gemini Key Found (${apiKey.slice(0, 6)}...)`);

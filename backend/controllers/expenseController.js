@@ -439,6 +439,53 @@ export async function scanReceiptImage(req, res) {
     return res.status(400).json({ success: false, message: "No image provided" });
   }
 
+  const openAiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || req.body.openAiKey;
+  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+
+  if (openAiKey && openAiKey.startsWith('sk-')) {
+    try {
+      const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openAiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analyze this UPI/bank payment receipt screenshot. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "merchant or recipient name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' },
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${cleanBase64}` } }
+            ]
+          }],
+          max_tokens: 300
+        })
+      });
+
+      if (openAiRes.ok) {
+        const jsonRes = await openAiRes.json();
+        const contentStr = jsonRes?.choices?.[0]?.message?.content || '';
+        const cleanedJson = contentStr.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(cleanedJson);
+
+        const newExpense = new expenseModel({
+          userId,
+          amount: Number(parsed.amount) || 0,
+          description: parsed.description || "Shared Payment Receipt",
+          category: parsed.category || "Other",
+          type: parsed.type || "expense",
+          date: new Date(),
+          needsNote: false
+        });
+        await newExpense.save();
+        return res.status(200).json({ success: true, message: "OpenAI Vision receipt parsed successfully", data: newExpense });
+      }
+    } catch (oErr) {
+      console.error("OpenAI Vision failed:", oErr.message);
+    }
+  }
+
   let apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey.startsWith('AQ.')) {
     apiKey = process.env.VITE_GEMINI_API_KEY;
