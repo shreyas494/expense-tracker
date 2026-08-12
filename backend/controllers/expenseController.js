@@ -392,7 +392,7 @@ export async function updateSmsTransactionNote(req, res) {
   if (!userId) {
     return res.status(401).json({ success: false, message: "Authentication required" });
   }
-  const { description, category, type, amount } = req.body;
+  const { description, category, type, amount, note, utr } = req.body;
 
   if (!description || !category || !type) {
     return res.status(400).json({ success: false, message: "Description, category, and type are required" });
@@ -403,6 +403,8 @@ export async function updateSmsTransactionNote(req, res) {
     if (amount != null && Number(amount) > 0) {
       updateFields.amount = Number(amount);
     }
+    if (note !== undefined) updateFields.note = String(note).trim();
+    if (utr !== undefined) updateFields.utr = String(utr).trim();
 
     let transaction;
     if (type === "income") {
@@ -466,7 +468,7 @@ export async function scanReceiptImage(req, res) {
           messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: 'Analyze this UPI/bank payment receipt screenshot. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "merchant or recipient name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' },
+              { type: 'text', text: 'Analyze this UPI/bank payment receipt screenshot. Extract exact payment amount (number), type (expense or income), recipient/merchant name, user note/message (if present, else empty string ""), and UTR / Ref Number / Transaction ID (if present, e.g. "111731423151" or "T260811...", else empty string ""). Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "merchant or recipient name", "note": "", "utr": "", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' },
               { type: 'image_url', image_url: { url: `data:${mimeType};base64,${cleanBase64}` } }
             ]
           }],
@@ -484,10 +486,12 @@ export async function scanReceiptImage(req, res) {
           userId,
           amount: Number(parsed.amount) || 0,
           description: parsed.description || "Shared Payment Receipt",
+          note: parsed.note ? String(parsed.note).trim() : "",
+          utr: parsed.utr ? String(parsed.utr).trim() : "",
           category: parsed.category || "Other",
           type: parsed.type || "expense",
           date: new Date(),
-          needsNote: false
+          needsNote: true
         });
         await newExpense.save();
         return res.status(200).json({ success: true, message: "OpenAI Vision receipt parsed successfully", data: newExpense });
@@ -521,7 +525,7 @@ export async function scanReceiptImage(req, res) {
             contents: [{
               parts: [
                 { inlineData: { mimeType, data: cleanBase64 } },
-                { text: 'Analyze this transaction screenshot carefully. Extract exact payment amount (number), type (expense or income), and recipient/merchant name string. Return ONLY raw JSON without markdown formatting: {"amount": 1, "type": "expense", "description": "recipient or merchant name", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
+                { text: 'Analyze this transaction screenshot carefully. Extract exact payment amount (number), type (expense or income), recipient/merchant name, user note/message (if present, else empty string ""), and UTR / Ref Number / Transaction ID (if present, e.g. "111731423151" or "T260811...", else empty string ""). Return ONLY raw JSON without markdown: {"amount": 1, "type": "expense", "description": "recipient or merchant name", "note": "", "utr": "", "category": "Food"|"Transport"|"Shopping"|"Utilities"|"Healthcare"|"Housing"|"Salary"|"Other"}' }
               ]
             }]
           })
@@ -536,6 +540,8 @@ export async function scanReceiptImage(req, res) {
             userId,
             amount: Number(parsed.amount) || 0,
             description: parsed.description || "Shared Payment Receipt",
+            note: parsed.note ? String(parsed.note).trim() : "",
+            utr: parsed.utr ? String(parsed.utr).trim() : "",
             category: parsed.category || "Other",
             type: parsed.type || "expense",
             date: new Date(),

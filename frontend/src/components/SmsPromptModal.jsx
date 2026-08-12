@@ -10,6 +10,8 @@ const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Enterta
 
 const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [description, setDescription] = useState(transaction.description || "")
+  const [note, setNote] = useState(transaction.note || "")
+  const [utr, setUtr] = useState(transaction.utr || "")
   const [amount, setAmount] = useState(transaction.amount != null ? transaction.amount : "")
   const [category, setCategory] = useState(transaction.category || (transaction.type === 'income' ? 'Salary' : 'Food'))
   const [isSaving, setIsSaving] = useState(false)
@@ -28,6 +30,8 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
         `${API_BASE}/expense/update-sms-note/${transaction._id}`,
         {
           description: description.trim() || 'Payment Transaction',
+          note: note.trim(),
+          utr: utr.trim(),
           category,
           type: transaction.type,
           amount: Number(amount) || transaction.amount || 0
@@ -57,6 +61,8 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
         `${API_BASE}/expense/update-sms-note/${transaction._id}`,
         {
           description: transaction.description || 'Payment Transaction',
+          note: transaction.note || '',
+          utr: transaction.utr || '',
           category: transaction.category || 'Other',
           type: transaction.type,
           amount: transaction.amount || 0
@@ -134,6 +140,12 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
               {new Date(transaction.createdAt || transaction.date || Date.now()).toLocaleString()}
             </span>
           </div>
+          {transaction.utr && (
+            <div className="flex justify-between text-xs font-mono font-semibold text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-1 rounded-lg">
+              <span>UTR / Ref No:</span>
+              <span>{transaction.utr}</span>
+            </div>
+          )}
           {transaction.description && (
             <div className="text-[10px] font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800/80 p-2 rounded-lg break-all leading-relaxed">
               <span className="font-bold text-gray-700 dark:text-gray-300">Extracted Text: </span>
@@ -148,18 +160,29 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5" />
-                Description / Note
+                Merchant / Recipient
               </span>
-              {(!description || description.toLowerCase().includes('payment transaction')) && (
-                <span className="text-[10px] text-amber-500 font-extrabold uppercase">Note Required</span>
-              )}
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Uddesh Bhagyawant, Swiggy dinner, Tea & snacks"
+              placeholder="e.g. Uddesh Bhagyawant PICT"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5" />
+              Note / Remarks (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Dinner with friends (leave blank if none)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold"
             />
           </div>

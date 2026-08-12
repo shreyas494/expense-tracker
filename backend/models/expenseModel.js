@@ -30,6 +30,14 @@ const expenseSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  utr: {
+    type: String,
+    default: "",
+  },
+  note: {
+    type: String,
+    default: "",
+  },
 }, {
     timestamps:true
 });
