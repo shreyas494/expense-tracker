@@ -134,58 +134,58 @@ const IncomePage = () => {
     <div className="space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 mr-2">
-            <p className="text-sm font-semibold text-gray-500">Total Income</p>
-            <h3 className="text-2xl font-bold text-gray-800 mt-1 truncate">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Income</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 truncate">
               ₹{stats.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
           </div>
-          <div className="p-2 bg-teal-50 rounded-xl text-teal-600 flex-shrink-0">
+          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex-shrink-0">
             <IndianRupee className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 mr-2">
-            <p className="text-sm font-semibold text-gray-500">Average Income</p>
-            <h3 className="text-2xl font-bold text-gray-800 mt-1 truncate">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Average Income</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 truncate">
               ₹{stats.average.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
           </div>
-          <div className="p-2 bg-teal-50 rounded-xl text-teal-600 flex-shrink-0">
+          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex-shrink-0">
             <IndianRupee className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 mr-2">
-            <p className="text-sm font-semibold text-gray-500">Transactions Count</p>
-            <h3 className="text-2xl font-bold text-gray-800 mt-1 truncate">{stats.count}</h3>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Transactions Count</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 truncate">{stats.count}</h3>
           </div>
-          <div className="p-2 bg-teal-50 rounded-xl text-teal-600 flex-shrink-0">
+          <div className="p-3 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex-shrink-0">
             <FileText className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Actions and Filters */}
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap flex-col md:flex-row justify-between items-center gap-4">
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-wrap flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex flex-wrap flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search income..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full sm:w-48 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+            className="w-full sm:w-48 px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
           >
             <option value="all">All Categories</option>
             {INCOME_CATEGORIES.map(cat => (
@@ -197,14 +197,14 @@ const IncomePage = () => {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export Excel
           </button>
           <button
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow-md active:scale-[0.98] transition-all duration-200 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Income
@@ -213,11 +213,11 @@ const IncomePage = () => {
       </div>
 
       {/* Transaction List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 font-semibold text-xs uppercase tracking-wider">
+              <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4">Description</th>
                 <th className="px-6 py-4">Date</th>
@@ -225,35 +225,35 @@ const IncomePage = () => {
                 <th className="px-6 py-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredIncomes.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50/50 transition-colors text-gray-700">
+                <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors text-slate-900 dark:text-slate-100">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                      <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
                         {INCOME_CATEGORY_ICONS[t.category] || <DollarSign className="w-4 h-4" />}
                       </div>
-                      <span className="font-semibold text-sm">{t.category}</span>
+                      <span className="font-extrabold text-xs">{t.category}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">{t.description}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-6 py-4 text-xs font-semibold">{t.description}</td>
+                  <td className="px-6 py-4 text-xs font-medium text-slate-500 dark:text-slate-400">
                     {new Date(t.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-teal-600 text-sm">
+                  <td className="px-6 py-4 text-right font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">
                     +₹{Number(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => openEditModal(t)}
-                        className="p-2 hover:bg-teal-50 text-gray-400 hover:text-teal-600 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 hover:bg-teal-500/10 text-slate-400 hover:text-teal-500 rounded-xl transition-colors cursor-pointer"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(t.id)}
-                        className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-xl transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -263,7 +263,7 @@ const IncomePage = () => {
               ))}
               {filteredIncomes.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-gray-400 text-sm font-medium">
+                  <td colSpan="5" className="text-center py-12 text-slate-400 font-semibold text-xs">
                     No income transactions found.
                   </td>
                 </tr>
@@ -282,51 +282,51 @@ const IncomePage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs"
             />
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md relative z-10 border border-gray-100"
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl w-full max-w-md relative z-10 border border-slate-200/80 dark:border-slate-800"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute right-5 top-5 p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-full transition-colors cursor-pointer"
+                className="absolute right-5 top-5 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
               
-              <h2 className="text-xl font-bold text-gray-800 mb-6">
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white mb-6">
                 {editingTransaction ? "Edit Income Stream" : "Add Income Stream"}
               </h2>
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium mb-4">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-bold mb-4">
                   {error}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Description</label>
                   <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
                       required
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="e.g. Consulting work, freelance salary"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (Rs)</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Amount (₹)</label>
                   <div className="relative">
-                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="number"
                       required
@@ -335,19 +335,19 @@ const IncomePage = () => {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Category</label>
                   <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700 bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                     >
                       {INCOME_CATEGORIES.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -357,15 +357,15 @@ const IncomePage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="date"
                       required
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -374,14 +374,14 @@ const IncomePage = () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="px-5 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-extrabold rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow-md disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs shadow-sm disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {isSubmitting ? "Saving..." : (editingTransaction ? "Save Changes" : "Add Stream")}
                   </button>

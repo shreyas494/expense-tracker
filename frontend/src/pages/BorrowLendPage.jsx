@@ -312,10 +312,10 @@ const BorrowLendPage = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 20 }}
             exit={{ opacity: 0, y: -50 }}
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-2 ${
+            className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl border text-xs font-extrabold flex items-center gap-2 ${
               toastType === 'error' 
-                ? 'bg-red-50 text-red-700 border-red-200' 
-                : 'bg-green-50 text-green-700 border-green-200'
+                ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' 
+                : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
             }`}
           >
             {toastType === 'error' ? <AlertCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -332,12 +332,12 @@ const BorrowLendPage = () => {
             Borrow & Lend Manager
           </h1>
           <p className={borrowLendStyles.subtitle}>
-            Track personal loans, debts, receivables, and log partial repayments.
+            Track personal loans, debts, receivables, and log partial repayments seamlessly.
           </p>
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow hover:shadow-md cursor-pointer transition-all duration-200 active:scale-[0.98]"
+          className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Record
@@ -373,7 +373,7 @@ const BorrowLendPage = () => {
             <p className={borrowLendStyles.statTitle}>Outstanding Debt</p>
             <p className={borrowLendStyles.statVal}>₹{stats.totalBorrowed.toLocaleString('en-IN')}</p>
           </div>
-          <div className={borrowLendStyles.statIcon('red')}>
+          <div className="p-3 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-xl shrink-0">
             <ArrowDownRight className="w-5 h-5" />
           </div>
         </div>
@@ -381,9 +381,9 @@ const BorrowLendPage = () => {
         <div className={borrowLendStyles.statCard}>
           <div className="flex-1 min-w-0 mr-2">
             <p className={borrowLendStyles.statTitle}>Overdue Debt</p>
-            <p className="text-2xl font-bold text-red-600 mt-1">₹{stats.overdueBorrowed.toLocaleString('en-IN')}</p>
+            <p className="text-xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">₹{stats.overdueBorrowed.toLocaleString('en-IN')}</p>
           </div>
-          <div className="p-2 rounded-xl bg-red-100 text-red-700 animate-pulse flex-shrink-0">
+          <div className="p-3 bg-rose-500/20 text-rose-500 dark:text-rose-400 rounded-xl animate-pulse shrink-0 border border-rose-500/30">
             <Clock className="w-5 h-5" />
           </div>
         </div>
@@ -393,7 +393,7 @@ const BorrowLendPage = () => {
             <p className={borrowLendStyles.statTitle}>Outstanding Lent</p>
             <p className={borrowLendStyles.statVal}>₹{stats.totalLent.toLocaleString('en-IN')}</p>
           </div>
-          <div className={borrowLendStyles.statIcon('green')}>
+          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl shrink-0">
             <ArrowUpRight className="w-5 h-5" />
           </div>
         </div>
@@ -401,9 +401,9 @@ const BorrowLendPage = () => {
         <div className={borrowLendStyles.statCard}>
           <div className="flex-1 min-w-0 mr-2">
             <p className={borrowLendStyles.statTitle}>Overdue Lent</p>
-            <p className="text-2xl font-bold text-orange-600 mt-1">₹{stats.overdueLent.toLocaleString('en-IN')}</p>
+            <p className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">₹{stats.overdueLent.toLocaleString('en-IN')}</p>
           </div>
-          <div className="p-2 rounded-xl bg-orange-100 text-orange-700 flex-shrink-0">
+          <div className="p-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl shrink-0 border border-amber-500/20">
             <AlertCircle className="w-5 h-5" />
           </div>
         </div>
@@ -412,13 +412,13 @@ const BorrowLendPage = () => {
       {/* Search and Filters */}
       <div className={borrowLendStyles.actionBar}>
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder={`Search by contact name...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 bg-white"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
           />
         </div>
 
@@ -427,10 +427,10 @@ const BorrowLendPage = () => {
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold capitalize transition-all cursor-pointer ${
                 statusFilter === f
-                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-teal-500 text-slate-950 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               {f === 'active' ? 'Pending / Partial' : f === 'settled' ? 'Settled Only' : 'All Records'}
@@ -443,15 +443,15 @@ const BorrowLendPage = () => {
       {loading ? (
         <div className="text-center py-12">
           <div className="animate-spin inline-block w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full mb-3"></div>
-          <p className="text-gray-500 text-sm font-semibold">Loading ledger records...</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Loading ledger records...</p>
         </div>
       ) : filteredRecords.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-gray-100 rounded-3xl p-8">
-          <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 text-teal-600">
+        <div className="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+          <div className="w-16 h-16 bg-teal-500/10 text-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             {activeTab === 'borrow' ? <PiggyBank className="w-8 h-8" /> : <HandCoins className="w-8 h-8" />}
           </div>
-          <h3 className="text-lg font-bold text-gray-800">No records found</h3>
-          <p className="text-gray-500 text-xs mt-1 max-w-sm mx-auto">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white">No records found</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-sm mx-auto font-medium">
             {searchQuery ? 'Try modifying your search filter.' : `Log your first entry to track what you've ${activeTab === 'borrow' ? 'borrowed' : 'lent'}.`}
           </p>
         </div>
@@ -470,7 +470,7 @@ const BorrowLendPage = () => {
                 <div className={borrowLendStyles.cardHeader}>
                   <div className="flex-1 min-w-0 mr-2">
                     <h3 className={borrowLendStyles.personName}>{rec.person}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
                       {new Date(rec.date).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
                     </p>
                     {isOverdue && (
@@ -490,7 +490,7 @@ const BorrowLendPage = () => {
                 </div>
 
                 {/* Amount Section */}
-                <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100 flex justify-between items-center my-3">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 flex justify-between items-center my-3">
                   <div>
                     <p className={borrowLendStyles.amountLabel}>Total Amount</p>
                     <p className={borrowLendStyles.amountVal}>₹{rec.amount.toLocaleString('en-IN')}</p>
