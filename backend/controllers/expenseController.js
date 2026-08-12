@@ -364,9 +364,9 @@ export async function getPendingNotes(req, res) {
   }
 
   try {
-    // Auto-clean old 0-rupee dummy pending notes
-    await expenseModel.deleteMany({ userId, needsNote: true, amount: 0, description: "Payment Transaction" });
-    await expenseModel.deleteMany({ userId, needsNote: true, amount: 0, description: "Shared Payment Receipt" });
+    // Auto-clean all 0-rupee pending notes so modal never shows 0 rupee clutter
+    await expenseModel.deleteMany({ userId, needsNote: true, amount: 0 });
+    await incomeModel.deleteMany({ userId, needsNote: true, amount: 0 });
 
     const [expenses, incomes] = await Promise.all([
       expenseModel.find({ userId, needsNote: true }).lean(),
@@ -535,7 +535,7 @@ export async function scanReceiptImage(req, res) {
             category: parsed.category || "Other",
             type: parsed.type || "expense",
             date: new Date(),
-            needsNote: true
+            needsNote: false
           });
           await newExpense.save();
           return res.status(200).json({ success: true, message: "Gemini Vision receipt parsed successfully", data: newExpense });

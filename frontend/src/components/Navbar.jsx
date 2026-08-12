@@ -29,35 +29,35 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // 1. Run client-side High-Contrast Canvas OCR first
-        const ocrResult = await scanReceiptWithOCR(file);
+        const reader = new FileReader();
+        await new Promise((resolve) => {
+          reader.onloadend = async () => {
+            try {
+              const res = await axios.post(
+                `${BASE_URL}/expense/scan-receipt`,
+                { imageBase64: reader.result, mimeType: file.type || 'image/png' },
+                { headers }
+              );
 
-        if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
-          const textToSubmit = ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}`;
-          await axios.post(
-            `${BASE_URL}/expense/sms-webhook`,
-            { text: textToSubmit },
-            { headers }
-          );
-        } else {
-          // 2. If client OCR did not find non-zero amount, call backend scan-receipt
-          const reader = new FileReader();
-          await new Promise((resolve) => {
-            reader.onloadend = async () => {
-              try {
-                await axios.post(
-                  `${BASE_URL}/expense/scan-receipt`,
-                  { imageBase64: reader.result, mimeType: file.type || 'image/png' },
-                  { headers }
-                );
-              } catch (bErr) {
-                console.error("Backend scan-receipt error:", bErr);
+              if (res.data.success && res.data.data?.amount > 0) {
+                alert(`Receipt Scanned Successfully!\nPaid ₹${res.data.data.amount} to ${res.data.data.description}`);
+              } else {
+                const ocrResult = await scanReceiptWithOCR(file);
+                if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
+                  await axios.post(
+                    `${BASE_URL}/expense/sms-webhook`,
+                    { text: ocrResult.rawText?.trim() || `Paid to ${ocrResult.description} ₹${ocrResult.amount}` },
+                    { headers }
+                  );
+                }
               }
-              resolve();
-            };
-            reader.readAsDataURL(file);
-          });
-        }
+            } catch (bErr) {
+              console.error("Backend scan-receipt error:", bErr);
+            }
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
       } catch (err) {
         console.error("Receipt upload error:", err);
       } finally {
