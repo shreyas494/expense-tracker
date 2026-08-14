@@ -432,6 +432,24 @@ export async function updateSmsTransactionNote(req, res) {
   }
 }
 
+// Controller to delete pending SMS note when converted to Borrow/Lend ledger
+export async function deletePendingNote(req, res) {
+  const { id } = req.params;
+  const userId = resolveUserId(req);
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "Authentication required" });
+  }
+
+  try {
+    await expenseModel.deleteOne({ _id: id, userId });
+    await incomeModel.deleteOne({ _id: id, userId });
+    res.json({ success: true, message: "Pending note removed" });
+  } catch (error) {
+    console.error("deletePendingNote error:", error);
+    res.status(500).json({ success: false, message: "Server error deleting pending note" });
+  }
+}
+
 // Controller to scan image receipt/screenshot via Gemini API or fallback
 export async function scanReceiptImage(req, res) {
   const userId = resolveUserId(req);

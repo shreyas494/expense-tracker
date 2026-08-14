@@ -11,6 +11,7 @@ import {
   addSmsTransaction,
   getPendingNotes,
   updateSmsTransactionNote,
+  deletePendingNote,
   scanReceiptImage
 } from '../controllers/expenseController.js';
 
@@ -30,5 +31,6 @@ expenseRouter.post("/sms-webhook", addSmsTransaction);
 expenseRouter.post("/scan-receipt", scanReceiptImage);
 expenseRouter.get("/pending-notes", authMiddleware, getPendingNotes);
 expenseRouter.put("/update-sms-note/:id", authMiddleware, updateSmsTransactionNote);
+expenseRouter.delete("/delete-pending-note/:id", authMiddleware, deletePendingNote);
 
 export default expenseRouter;

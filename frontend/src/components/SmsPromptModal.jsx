@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, CheckCircle, Tag, FileText, ArrowRight, RefreshCw } from 'lucide-react'
+import { AlertCircle, CheckCircle, Tag, FileText, ArrowRight, RefreshCw, User, Calendar, History, PlusCircle, ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
@@ -9,6 +9,18 @@ const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Bonus', 'Other'
 const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Entertainment', 'Utilities', 'Healthcare', 'Other']
 
 const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
+  // Nature selection: 'income', 'expense', 'borrow', 'lend'
+  const [nature, setNature] = useState(() => {
+    if (transaction.type === 'income') return 'income'
+    return 'expense'
+  })
+
+  // Sub-action for Borrow/Lend: 'new' or 'repay'
+  const [borrowLendAction, setBorrowLendAction] = useState('new')
+  const [activeRecords, setActiveRecords] = useState([])
+  const [selectedRecordId, setSelectedRecordId] = useState('')
+  const [dueDate, setDueDate] = useState('')
+
   const [description, setDescription] = useState(transaction.description || "")
   const [note, setNote] = useState(transaction.note || "")
   const [utr, setUtr] = useState(transaction.utr || "")
@@ -16,6 +28,27 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [category, setCategory] = useState(transaction.category || (transaction.type === 'income' ? 'Salary' : 'Food'))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
+
+  // Fetch active Borrow/Lend records when switching to borrow or lend
+  useEffect(() => {
+    const fetchActiveLedgers = async () => {
+      try {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await axios.get(`${API_BASE}/borrow-lend/get`, { headers })
+        if (Array.isArray(res.data)) {
+          const pendingRecords = res.data.filter(r => r.status !== 'settled')
+          setActiveRecords(pendingRecords)
+          if (pendingRecords.length > 0) {
+            setSelectedRecordId(pendingRecords[0]._id)
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching active borrow/lend records:", err)
+      }
+    }
+    fetchActiveLedgers()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,24 +59,66 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token")
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-      await axios.put(
-        `${API_BASE}/expense/update-sms-note/${transaction._id}`,
-        {
-          description: description.trim() || 'Payment Transaction',
-          note: note.trim(),
-          utr: utr.trim(),
-          category,
-          type: transaction.type,
-          amount: Number(amount) || transaction.amount || 0
-        },
-        { headers }
-      )
+      if (nature === 'income' || nature === 'expense') {
+        // Standard Income/Expense
+        await axios.put(
+          `${API_BASE}/expense/update-sms-note/${transaction._id}`,
+          {
+            description: description.trim() || 'Payment Transaction',
+            note: note.trim(),
+            utr: utr.trim(),
+            category,
+            type: nature,
+            amount: Number(amount) || transaction.amount || 0
+          },
+          { headers }
+        )
+      } else if (nature === 'borrow' || nature === 'lend') {
+        if (borrowLendAction === 'new') {
+          // Create New Ledger Entry
+          await axios.post(
+            `${API_BASE}/borrow-lend/add`,
+            {
+              type: nature,
+              person: description.trim() || 'Contact Person',
+              amount: Number(amount) || transaction.amount || 0,
+              description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
+              dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+              date: transaction.createdAt || transaction.date || new Date().toISOString()
+            },
+            { headers }
+          )
+        } else if (borrowLendAction === 'repay') {
+          // Apply as Repayment to Existing Record
+          if (!selectedRecordId) {
+            setError("Please select an active ledger record to apply this repayment")
+            setIsSaving(false)
+            return
+          }
+          await axios.post(
+            `${API_BASE}/borrow-lend/repay/${selectedRecordId}`,
+            {
+              amount: Number(amount) || transaction.amount || 0,
+              notes: note.trim() || description.trim() || 'Repayment via scanned receipt/alert',
+              date: transaction.createdAt || transaction.date || new Date().toISOString()
+            },
+            { headers }
+          )
+        }
+
+        // Clean up the pending note from SMS inbox after converting to ledger
+        try {
+          await axios.delete(`${API_BASE}/expense/delete-pending-note/${transaction._id}`, { headers })
+        } catch (delErr) {
+          console.warn("Clean pending note notice:", delErr)
+        }
+      }
 
       onSaved()
       onClose()
     } catch (err) {
-      console.error("Failed to update transaction note:", err)
-      setError("Failed to save. Please try again.")
+      console.error("Failed to update transaction:", err)
+      setError(err?.response?.data?.message || "Failed to save. Please try again.")
     } finally {
       setIsSaving(false)
     }
@@ -80,7 +155,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
     }
   }
 
-  const categories = transaction.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+  const categories = nature === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -103,15 +178,15 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
         <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2.5 rounded-xl ${transaction.type === 'income' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+          <div className={`p-2.5 rounded-xl ${nature === 'income' || nature === 'borrow' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
             <AlertCircle className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              Shared Transaction Detected
+              Classify Scanned Transaction
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-              Extracted from shared alert or bank SMS
+              Extracted from bank alert, UPI screenshot, or SMS
             </p>
           </div>
         </div>
@@ -121,8 +196,8 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Amount (₹)</span>
             <div className="flex items-center gap-1">
-              <span className={`text-xs font-extrabold ${transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {transaction.type === 'income' ? '+' : '-'} ₹
+              <span className={`text-xs font-extrabold ${nature === 'income' || nature === 'borrow' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {nature === 'income' || nature === 'borrow' ? '+' : '-'} ₹
               </span>
               <input
                 type="number"
@@ -130,7 +205,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className={`w-28 text-right font-extrabold text-base px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 ${transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                className={`w-28 text-right font-extrabold text-base px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 ${nature === 'income' || nature === 'borrow' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
               />
             </div>
           </div>
@@ -148,31 +223,184 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           )}
           {transaction.description && (
             <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 p-2 rounded-lg break-all leading-relaxed">
-              <span className="font-bold text-slate-700 dark:text-slate-300">Extracted Text: </span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">Raw Text: </span>
               {transaction.description}
             </div>
           )}
         </div>
 
-        {/* Edit Form */}
+        {/* Form Controls */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5" />
-                Merchant / Recipient
-              </span>
+          {/* Nature Selection Tabs */}
+          <div>
+            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+              Select Transaction Type
             </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Uddesh Bhagyawant PICT"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
-            />
+            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setNature('expense')}
+                className={`py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  nature === 'expense'
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                onClick={() => setNature('income')}
+                className={`py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  nature === 'income'
+                    ? 'bg-emerald-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Income
+              </button>
+              <button
+                type="button"
+                onClick={() => setNature('borrow')}
+                className={`py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  nature === 'borrow'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Borrow
+              </button>
+              <button
+                type="button"
+                onClick={() => setNature('lend')}
+                className={`py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  nature === 'lend'
+                    ? 'bg-teal-500 text-slate-950 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Lend
+              </button>
+            </div>
           </div>
 
+          {/* Sub-Action Selection for Borrow / Lend */}
+          {(nature === 'borrow' || nature === 'lend') && (
+            <div className="p-3 bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 rounded-2xl space-y-3">
+              <label className="block text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                {nature === 'borrow' ? 'Borrowing Action' : 'Lending Action'}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBorrowLendAction('new')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    borrowLendAction === 'new'
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  New Record
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBorrowLendAction('repay')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    borrowLendAction === 'repay'
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <History className="w-3.5 h-3.5" />
+                  Repay Existing
+                </button>
+              </div>
+
+              {/* Dropdown if Repay Existing Record is chosen */}
+              {borrowLendAction === 'repay' && (
+                <div className="pt-1">
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                    Select Active Ledger Entry to Repay
+                  </label>
+                  {activeRecords.length === 0 ? (
+                    <p className="text-xs text-rose-500 font-semibold italic bg-white dark:bg-slate-900 p-2 rounded-xl border border-rose-500/20">
+                      No active pending ledger records found to apply repayment.
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedRecordId}
+                      onChange={(e) => setSelectedRecordId(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    >
+                      {activeRecords.map(r => (
+                        <option key={r._id} value={r._id}>
+                          {r.person} — {r.type === 'borrow' ? 'Borrowed' : 'Lent'} ₹{r.amount} (Remaining: ₹{r.remainingAmount})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Contact / Merchant Field */}
+          {(nature === 'income' || nature === 'expense' || borrowLendAction === 'new') && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  {nature === 'borrow' || nature === 'lend' ? <User className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+                  {nature === 'borrow' || nature === 'lend' ? 'Contact Person Name' : 'Merchant / Recipient'}
+                </span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder={nature === 'borrow' || nature === 'lend' ? 'e.g. Rahul, Amit' : 'e.g. Swiggy, Uber'}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
+              />
+            </div>
+          )}
+
+          {/* Category Selector for Income / Expense */}
+          {(nature === 'income' || nature === 'expense') && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5" />
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all cursor-pointer"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Due Date for New Borrow / Lend Entry */}
+          {(nature === 'borrow' || nature === 'lend') && borrowLendAction === 'new' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                Due Date (Optional)
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
+              />
+            </div>
+          )}
+
+          {/* Note / Remarks Field */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <FileText className="w-3.5 h-3.5" />
@@ -180,27 +408,11 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
             </label>
             <input
               type="text"
-              placeholder="e.g. Dinner with friends (leave blank if none)"
+              placeholder="e.g. Shared dinner bill, PG rent advance"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Tag className="w-3.5 h-3.5" />
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all cursor-pointer"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
           </div>
 
           {error && (
@@ -240,3 +452,4 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
 }
 
 export default SmsPromptModal
+
