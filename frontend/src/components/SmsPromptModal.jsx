@@ -25,6 +25,9 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [isSplitBill, setIsSplitBill] = useState(false)
   const [personalShare, setPersonalShare] = useState('')
   const [personalCategory, setPersonalCategory] = useState('Food')
+  const [splitFriends, setSplitFriends] = useState([
+    { id: 1, name: '', share: '' }
+  ])
 
   const [description, setDescription] = useState(transaction.description || "")
   const [note, setNote] = useState(transaction.note || "")
@@ -34,13 +37,53 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
 
+  // Auto-calculate equal shares across all friends
+  const autoDistributeShares = (friendsList, totalAmt, myShare) => {
+    const total = Number(totalAmt) || 0
+    const mine = Number(myShare) || 0
+    const remaining = Math.max(0, total - mine)
+    if (friendsList.length === 0 || remaining <= 0) return friendsList
+
+    const equalShare = (remaining / friendsList.length).toFixed(2)
+    return friendsList.map((f, idx) => ({
+      ...f,
+      share: equalShare
+    }))
+  }
+
   // Auto-calculate default half personal share when split bill is toggled
   const handleToggleSplitBill = (checked) => {
     setIsSplitBill(checked)
     if (checked && amount) {
-      const half = (Number(amount) / 2).toFixed(2)
-      setPersonalShare(half)
+      const total = Number(amount)
+      const halfMine = (total / 2).toFixed(2)
+      setPersonalShare(halfMine)
+      const initialFriends = [{ id: 1, name: description.trim() || 'Friend 1', share: (total - Number(halfMine)).toFixed(2) }]
+      setSplitFriends(initialFriends)
     }
+  }
+
+  const handlePersonalShareChange = (val) => {
+    setPersonalShare(val)
+    setSplitFriends(prev => autoDistributeShares(prev, amount, val))
+  }
+
+  const handleAddFriend = () => {
+    const updated = [
+      ...splitFriends,
+      { id: Date.now(), name: `Friend ${splitFriends.length + 1}`, share: '' }
+    ]
+    setSplitFriends(autoDistributeShares(updated, amount, personalShare))
+  }
+
+  const handleRemoveFriend = (id) => {
+    if (splitFriends.length <= 1) return
+    const updated = splitFriends.filter(f => f.id !== id)
+    setSplitFriends(autoDistributeShares(updated, amount, personalShare))
+  }
+
+  const handleFriendChange = (id, field, value) => {
+    setSplitFriends(prev => prev.map(f => f.id === id ? { ...f, [field]: value } : f))
   }
 
   // Fetch active Borrow/Lend records when switching to borrow or lend
@@ -94,11 +137,24 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           if (isSplitBill) {
             const pShare = Number(personalShare) || 0
             if (pShare >= totalAmt || pShare < 0) {
-              setError(`Personal share must be less than total amount (₹${totalAmt})`)
+              setError(`Personal share must be less than total bill amount (₹${totalAmt})`)
               setIsSaving(false)
               return
             }
-            const netLentAmount = totalAmt - pShare
+
+            // Validate all friends have names and valid shares
+            for (let f of splitFriends) {
+              if (!f.name.trim()) {
+                setError("Please provide a name for all friends in the split")
+                setIsSaving(false)
+                return
+              }
+              if (!Number(f.share) || Number(f.share) <= 0) {
+                setError(`Please enter a valid share amount for ${f.name}`)
+                setIsSaving(false)
+                return
+              }
+            }
 
             // 1. Log personal share as Expense
             await axios.post(
@@ -112,21 +168,23 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
               { headers }
             )
 
-            // 2. Log friend's share as Lend/Borrow
-            await axios.post(
-              `${API_BASE}/borrow-lend/add`,
-              {
-                type: nature,
-                person: description.trim() || 'Contact Person',
-                amount: netLentAmount,
-                description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
-                dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-                date: transaction.createdAt || transaction.date || new Date().toISOString()
-              },
-              { headers }
-            )
+            // 2. Log each friend's individual share as Lend/Borrow
+            for (let f of splitFriends) {
+              await axios.post(
+                `${API_BASE}/borrow-lend/add`,
+                {
+                  type: nature,
+                  person: f.name.trim(),
+                  amount: Number(f.share),
+                  description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
+                  dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+                  date: transaction.createdAt || transaction.date || new Date().toISOString()
+                },
+                { headers }
+              )
+            }
           } else {
-            // Full amount as Borrow/Lend
+            // Single contact full amount as Borrow/Lend
             await axios.post(
               `${API_BASE}/borrow-lend/add`,
               {
@@ -411,7 +469,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
                   </label>
 
                   {isSplitBill && (
-                    <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-amber-500/30 space-y-2.5">
+                    <div className="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-amber-500/30 space-y-3">
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-semibold text-slate-500 dark:text-slate-400">Total Scanned Bill:</span>
                         <span className="font-extrabold text-slate-900 dark:text-white">₹{amount || 0}</span>
@@ -426,35 +484,78 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
                             type="number"
                             step="any"
                             value={personalShare}
-                            onChange={(e) => setPersonalShare(e.target.value)}
+                            onChange={(e) => handlePersonalShareChange(e.target.value)}
                             placeholder="0.00"
-                            className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 bg-slate-50 dark:bg-slate-800"
+                            className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-slate-50 dark:bg-slate-800"
                           />
                         </div>
 
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            {nature === 'lend' ? "Friend's Share (Lent)" : "Friend's Share (Borrow)"}
+                            Category for My Share
                           </label>
-                          <div className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-extrabold text-teal-600 dark:text-teal-400 bg-slate-100 dark:bg-slate-800 flex items-center">
-                            ₹{Math.max(0, (Number(amount || 0) - Number(personalShare || 0))).toFixed(2)}
-                          </div>
+                          <select
+                            value={personalCategory}
+                            onChange={(e) => setPersonalCategory(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-xs cursor-pointer"
+                          >
+                            {EXPENSE_CATEGORIES.map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                          Category for My Personal Share
-                        </label>
-                        <select
-                          value={personalCategory}
-                          onChange={(e) => setPersonalCategory(e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-xs cursor-pointer"
-                        >
-                          {EXPENSE_CATEGORIES.map(c => (
-                            <option key={c} value={c}>{c}</option>
+                      {/* Friends List Header */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                            Friends Splitting Remaining ₹{Math.max(0, (Number(amount || 0) - Number(personalShare || 0))).toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleAddFriend}
+                            className="text-[10px] font-extrabold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <PlusCircle className="w-3 h-3" />
+                            Add Friend
+                          </button>
+                        </div>
+
+                        <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                          {splitFriends.map((f, idx) => (
+                            <div key={f.id} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder={`Friend ${idx + 1} Name`}
+                                value={f.name}
+                                onChange={(e) => handleFriendChange(f.id, 'name', e.target.value)}
+                                className="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
+                              />
+                              <div className="w-24 relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">₹</span>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  placeholder="0.00"
+                                  value={f.share}
+                                  onChange={(e) => handleFriendChange(f.id, 'share', e.target.value)}
+                                  className="w-full pl-6 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-teal-600 dark:text-teal-400 bg-slate-50 dark:bg-slate-800"
+                                />
+                              </div>
+                              {splitFriends.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFriend(f.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-500 rounded transition-colors cursor-pointer"
+                                  title="Remove Friend"
+                                >
+                                  &times;
+                                </button>
+                              )}
+                            </div>
                           ))}
-                        </select>
+                        </div>
                       </div>
                     </div>
                   )}
