@@ -6,7 +6,7 @@ import {
   Plus, Search, Calendar, Edit2, Trash2, HandCoins, 
   PiggyBank, AlertCircle, CheckCircle2, User, Clock, 
   ArrowUpRight, ArrowDownRight, Send, History, IndianRupee,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Phone, Contact, MessageCircle
 } from 'lucide-react'
 import { borrowLendStyles, cn } from '../assets/dummyStyles'
 
@@ -29,6 +29,7 @@ const BorrowLendPage = () => {
   const [recordId, setRecordId] = useState(null)
   const [formType, setFormType] = useState('borrow')
   const [person, setPerson] = useState('')
+  const [phone, setPhone] = useState('')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -134,11 +135,32 @@ const BorrowLendPage = () => {
     })
   }, [records, activeTab, statusFilter, searchQuery])
 
+  // Import contact into Add/Edit Form via Native Contact Picker API
+  const handleImportContactToForm = async () => {
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+      try {
+        const props = ['name', 'tel']
+        const opts = { multiple: false }
+        const selected = await navigator.contacts.select(props, opts)
+        if (selected && selected.length > 0) {
+          const c = selected[0]
+          if (c.name && c.name[0]) setPerson(c.name[0])
+          if (c.tel && c.tel[0]) setPhone(c.tel[0].replace(/[^\d+]/g, ''))
+        }
+      } catch (err) {
+        console.warn("Contact picker notice:", err)
+      }
+    } else {
+      alert("Native Contact Picker is available on mobile browsers (e.g. Chrome on Android). You can enter details manually.")
+    }
+  }
+
   // Open Add Modal
   const openAddModal = () => {
     setRecordId(null)
     setFormType(activeTab)
     setPerson('')
+    setPhone('')
     setAmount('')
     setDescription('')
     setDueDate('')
@@ -152,6 +174,7 @@ const BorrowLendPage = () => {
     setRecordId(rec._id)
     setFormType(rec.type)
     setPerson(rec.person)
+    setPhone(rec.phone || '')
     setAmount(rec.amount)
     setDescription(rec.description || '')
     setDueDate(rec.dueDate ? rec.dueDate.split('T')[0] : '')
@@ -169,6 +192,7 @@ const BorrowLendPage = () => {
     const payload = {
       type: formType,
       person,
+      phone: phone.trim(),
       amount: Number(amount),
       description,
       dueDate: dueDate || undefined,
@@ -300,6 +324,22 @@ const BorrowLendPage = () => {
     
     navigator.clipboard.writeText(text)
     triggerToast('Reminder text copied to clipboard!')
+  }
+
+  // Open Direct WhatsApp Chat with Pre-filled Reminder
+  const handleWhatsAppReminder = (rec) => {
+    const formattedDate = rec.dueDate ? new Date(rec.dueDate).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : ''
+    const text = `Hey ${rec.person}, friendly reminder about the outstanding payment of ₹${rec.remainingAmount.toLocaleString('en-IN')}${formattedDate ? ` which was due on ${formattedDate}` : ''}. Let me know when you can clear it via UPI. Thanks!`
+    
+    const encoded = encodeURIComponent(text)
+    const phoneNum = rec.phone ? rec.phone.replace(/[^\d]/g, '') : ''
+    
+    if (phoneNum) {
+      const fullPhone = phoneNum.length === 10 ? `91${phoneNum}` : phoneNum
+      window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${encoded}`, '_blank')
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank')
+    }
   }
 
   return (
@@ -508,16 +548,24 @@ const BorrowLendPage = () => {
                   {rec.description || <span className="text-slate-400 dark:text-slate-500 italic text-xs">No description provided</span>}
                 </p>
 
-                {/* Meta / Due Date */}
-                <div className={borrowLendStyles.metaInfo}>
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span>
-                    {rec.dueDate ? (
-                      <>Due: <span className="font-semibold text-slate-700 dark:text-slate-300">{new Date(rec.dueDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span></>
-                    ) : (
-                      <span className="italic text-slate-400 dark:text-slate-500">No due date</span>
-                    )}
-                  </span>
+                {/* Meta / Due Date & Phone */}
+                <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 mt-3 gap-2">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {rec.dueDate ? (
+                        <>Due: <span className="font-semibold text-slate-700 dark:text-slate-300">{new Date(rec.dueDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span></>
+                      ) : (
+                        <span className="italic text-slate-400 dark:text-slate-500">No due date</span>
+                      )}
+                    </span>
+                  </div>
+                  {rec.phone && (
+                    <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg shrink-0">
+                      <Phone className="w-3 h-3" />
+                      <span>{rec.phone}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Actions */}
@@ -539,13 +587,22 @@ const BorrowLendPage = () => {
                     </button>
                     
                     {activeTab === 'lend' && rec.status !== 'settled' && (
-                      <button
-                        onClick={() => handleCopyReminder(rec)}
-                        className="p-2 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl transition-all cursor-pointer border border-teal-500/20"
-                        title="Copy Payment Reminder Text"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleWhatsAppReminder(rec)}
+                          className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl transition-all cursor-pointer border border-emerald-500/20 flex items-center justify-center"
+                          title="Send Direct WhatsApp Reminder"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
+                        </button>
+                        <button
+                          onClick={() => handleCopyReminder(rec)}
+                          className="p-2 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl transition-all cursor-pointer border border-teal-500/20"
+                          title="Copy Reminder Text to Clipboard"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                      </>
                     )}
                   </div>
 
@@ -622,7 +679,17 @@ const BorrowLendPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Contact Person</label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contact Person</label>
+                    <button
+                      type="button"
+                      onClick={handleImportContactToForm}
+                      className="text-[10px] font-extrabold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Contact className="w-3.5 h-3.5" />
+                      Import Contact
+                    </button>
+                  </div>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -631,6 +698,20 @@ const BorrowLendPage = () => {
                       value={person}
                       onChange={(e) => setPerson(e.target.value)}
                       placeholder="Enter contact name..."
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Phone / WhatsApp Number (Optional)</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. 9876543210"
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 placeholder-slate-400"
                     />
                   </div>

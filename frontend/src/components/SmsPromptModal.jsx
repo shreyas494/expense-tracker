@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, CheckCircle, Tag, FileText, ArrowRight, RefreshCw, User, Calendar, History, PlusCircle, ArrowDownRight, ArrowUpRight } from 'lucide-react'
+import { AlertCircle, CheckCircle, Tag, FileText, ArrowRight, RefreshCw, User, Calendar, History, PlusCircle, Phone, Contact } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
@@ -26,16 +26,58 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [personalShare, setPersonalShare] = useState('')
   const [personalCategory, setPersonalCategory] = useState('Food')
   const [splitFriends, setSplitFriends] = useState([
-    { id: 1, name: '', share: '' }
+    { id: 1, name: '', phone: '', share: '' }
   ])
 
   const [description, setDescription] = useState(transaction.description || "")
+  const [phone, setPhone] = useState("")
   const [note, setNote] = useState(transaction.note || "")
   const [utr, setUtr] = useState(transaction.utr || "")
   const [amount, setAmount] = useState(transaction.amount != null ? transaction.amount : "")
   const [category, setCategory] = useState(transaction.category || (transaction.type === 'income' ? 'Salary' : 'Food'))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
+
+  // Import single contact from native address book
+  const handleImportSingleContact = async () => {
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+      try {
+        const props = ['name', 'tel']
+        const opts = { multiple: false }
+        const selected = await navigator.contacts.select(props, opts)
+        if (selected && selected.length > 0) {
+          const c = selected[0]
+          if (c.name && c.name[0]) setDescription(c.name[0])
+          if (c.tel && c.tel[0]) setPhone(c.tel[0].replace(/[^\d+]/g, ''))
+        }
+      } catch (err) {
+        console.warn("Contact picker notice:", err)
+      }
+    } else {
+      alert("Native Contact Picker is available on mobile browsers (e.g. Chrome on Android). You can enter the phone number manually.")
+    }
+  }
+
+  // Import contact for specific friend in split bill
+  const handleImportFriendContact = async (friendId) => {
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+      try {
+        const props = ['name', 'tel']
+        const opts = { multiple: false }
+        const selected = await navigator.contacts.select(props, opts)
+        if (selected && selected.length > 0) {
+          const c = selected[0]
+          const cName = c.name && c.name[0] ? c.name[0] : ''
+          const cPhone = c.tel && c.tel[0] ? c.tel[0].replace(/[^\d+]/g, '') : ''
+          setSplitFriends(prev => prev.map(f => f.id === friendId ? { ...f, name: cName || f.name, phone: cPhone || f.phone } : f))
+        }
+      } catch (err) {
+        console.warn("Contact picker notice:", err)
+      }
+    } else {
+      alert("Native Contact Picker is available on mobile browsers (e.g. Chrome on Android). You can enter the phone number manually.")
+    }
+  }
 
   // Auto-calculate equal shares across all friends
   const autoDistributeShares = (friendsList, totalAmt, myShare) => {
@@ -45,7 +87,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
     if (friendsList.length === 0 || remaining <= 0) return friendsList
 
     const equalShare = (remaining / friendsList.length).toFixed(2)
-    return friendsList.map((f, idx) => ({
+    return friendsList.map((f) => ({
       ...f,
       share: equalShare
     }))
@@ -58,7 +100,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       const total = Number(amount)
       const halfMine = (total / 2).toFixed(2)
       setPersonalShare(halfMine)
-      const initialFriends = [{ id: 1, name: '', share: (total - Number(halfMine)).toFixed(2) }]
+      const initialFriends = [{ id: 1, name: '', phone: '', share: (total - Number(halfMine)).toFixed(2) }]
       setSplitFriends(initialFriends)
     }
   }
@@ -71,7 +113,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const handleAddFriend = () => {
     const updated = [
       ...splitFriends,
-      { id: Date.now(), name: '', share: '' }
+      { id: Date.now(), name: '', phone: '', share: '' }
     ]
     setSplitFriends(autoDistributeShares(updated, amount, personalShare))
   }
@@ -168,13 +210,14 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
               { headers }
             )
 
-            // 2. Log each friend's individual share as Lend/Borrow
+            // 2. Log each friend's individual share as Lend/Borrow with phone number
             for (let f of splitFriends) {
               await axios.post(
                 `${API_BASE}/borrow-lend/add`,
                 {
                   type: nature,
                   person: f.name.trim(),
+                  phone: f.phone ? f.phone.trim() : "",
                   amount: Number(f.share),
                   description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
                   dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
@@ -190,6 +233,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
               {
                 type: nature,
                 person: description.trim() || 'Contact Person',
+                phone: phone.trim(),
                 amount: totalAmt,
                 description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
                 dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
@@ -522,37 +566,63 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
                           </button>
                         </div>
 
-                        <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                           {splitFriends.map((f, idx) => (
-                            <div key={f.id} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                placeholder={`Friend ${idx + 1} Name`}
-                                value={f.name}
-                                onChange={(e) => handleFriendChange(f.id, 'name', e.target.value)}
-                                className="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800"
-                              />
-                              <div className="w-24 relative">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">₹</span>
-                                <input
-                                  type="number"
-                                  step="any"
-                                  placeholder="0.00"
-                                  value={f.share}
-                                  onChange={(e) => handleFriendChange(f.id, 'share', e.target.value)}
-                                  className="w-full pl-6 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-teal-600 dark:text-teal-400 bg-slate-50 dark:bg-slate-800"
-                                />
-                              </div>
-                              {splitFriends.length > 1 && (
+                            <div key={f.id} className="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                  <input
+                                    type="text"
+                                    placeholder={`Friend ${idx + 1} Name`}
+                                    value={f.name}
+                                    onChange={(e) => handleFriendChange(f.id, 'name', e.target.value)}
+                                    className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-900"
+                                  />
+                                </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveFriend(f.id)}
-                                  className="p-1 text-slate-400 hover:text-rose-500 rounded transition-colors cursor-pointer"
-                                  title="Remove Friend"
+                                  onClick={() => handleImportFriendContact(f.id)}
+                                  className="p-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl border border-teal-500/20 text-[10px] font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                                  title="Import Contact from Phone Address Book"
                                 >
-                                  &times;
+                                  <Contact className="w-3.5 h-3.5" />
+                                  Import
                                 </button>
-                              )}
+                                {splitFriends.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveFriend(f.id)}
+                                    className="p-1 text-slate-400 hover:text-rose-500 rounded transition-colors cursor-pointer shrink-0"
+                                    title="Remove Friend"
+                                  >
+                                    &times;
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="relative">
+                                  <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                                  <input
+                                    type="tel"
+                                    placeholder="WhatsApp / Phone No"
+                                    value={f.phone || ''}
+                                    onChange={(e) => handleFriendChange(f.id, 'phone', e.target.value)}
+                                    className="w-full pl-7 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-900"
+                                  />
+                                </div>
+                                <div className="relative">
+                                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">₹</span>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    placeholder="0.00"
+                                    value={f.share}
+                                    onChange={(e) => handleFriendChange(f.id, 'share', e.target.value)}
+                                    className="w-full pl-6 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-teal-600 dark:text-teal-400 bg-white dark:bg-slate-900"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -566,21 +636,49 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
 
           {/* Contact / Merchant Field */}
           {(nature === 'income' || nature === 'expense' || borrowLendAction === 'new') && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  {nature === 'borrow' || nature === 'lend' ? <User className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
-                  {nature === 'borrow' || nature === 'lend' ? 'Contact Person Name' : 'Merchant / Recipient'}
-                </span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder={nature === 'borrow' || nature === 'lend' ? 'e.g. Rahul, Amit' : 'e.g. Swiggy, Uber'}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
-              />
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    {nature === 'borrow' || nature === 'lend' ? <User className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+                    {nature === 'borrow' || nature === 'lend' ? 'Contact Person Name' : 'Merchant / Recipient'}
+                  </span>
+                  {(nature === 'borrow' || nature === 'lend') && (
+                    <button
+                      type="button"
+                      onClick={handleImportSingleContact}
+                      className="text-[10px] font-extrabold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Contact className="w-3 h-3" />
+                      Import Contact
+                    </button>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={nature === 'borrow' || nature === 'lend' ? 'e.g. Rahul, Amit' : 'e.g. Swiggy, Uber'}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
+                />
+              </div>
+
+              {(nature === 'borrow' || nature === 'lend') && borrowLendAction === 'new' && !isSplitBill && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5" />
+                    Phone / WhatsApp Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold text-xs transition-all"
+                  />
+                </div>
+              )}
             </div>
           )}
 

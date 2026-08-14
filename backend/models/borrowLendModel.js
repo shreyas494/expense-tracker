@@ -31,6 +31,10 @@ const borrowLendSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  phone: {
+    type: String,
+    default: "",
+  },
   amount: {
     type: Number,
     required: true,

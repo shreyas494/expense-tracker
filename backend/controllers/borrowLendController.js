@@ -3,7 +3,7 @@ import borrowLendModel from "../models/borrowLendModel.js";
 // Add Borrow/Lend record
 export async function addBorrowLend(req, res) {
   const userId = req.user._id;
-  const { type, person, amount, description, dueDate, date } = req.body;
+  const { type, person, phone, amount, description, dueDate, date } = req.body;
 
   try {
     if (!type || !person || amount == null) {
@@ -31,6 +31,7 @@ export async function addBorrowLend(req, res) {
       userId,
       type,
       person,
+      phone: phone ? String(phone).trim() : "",
       amount: Number(amount),
       remainingAmount: Number(amount),
       description: description || "",
@@ -80,7 +81,7 @@ export async function getAllBorrowLend(req, res) {
 export async function updateBorrowLend(req, res) {
   const { id } = req.params;
   const userId = req.user._id;
-  const { type, person, amount, description, dueDate, date } = req.body;
+  const { type, person, phone, amount, description, dueDate, date } = req.body;
 
   try {
     const record = await borrowLendModel.findOne({ _id: id, userId });
@@ -99,6 +100,7 @@ export async function updateBorrowLend(req, res) {
     }
 
     if (person) record.person = person;
+    if (phone !== undefined) record.phone = String(phone).trim();
     if (type) record.type = type;
     if (description !== undefined) record.description = description;
     if (dueDate !== undefined) record.dueDate = dueDate ? new Date(dueDate) : undefined;
