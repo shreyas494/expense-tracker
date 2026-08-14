@@ -422,12 +422,12 @@ const BorrowLendPage = () => {
           />
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto justify-end mt-2 md:mt-0">
+        <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto custom-scrollbar pb-1 md:pb-0 justify-start md:justify-end">
           {['all', 'active', 'settled'].map(f => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold capitalize transition-all cursor-pointer ${
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold capitalize transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 statusFilter === f
                   ? 'bg-teal-500 text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -521,35 +521,37 @@ const BorrowLendPage = () => {
                 </div>
 
                 {/* Card Actions */}
-                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 justify-end items-center">
-                  <button
-                    onClick={() => openEditModal(rec)}
-                    className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500/10 text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
-                    title="Edit Record Details"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteRecord(rec._id)}
-                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-colors cursor-pointer border border-rose-500/20"
-                    title="Delete Record"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  
-                  {activeTab === 'lend' && rec.status !== 'settled' && (
+                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => handleCopyReminder(rec)}
-                      className="p-2 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl transition-all cursor-pointer border border-teal-500/20"
-                      title="Copy Payment Reminder Text"
+                      onClick={() => openEditModal(rec)}
+                      className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500/10 text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
+                      title="Edit Record Details"
                     >
-                      <Send className="w-4 h-4" />
+                      <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                  )}
+                    <button
+                      onClick={() => handleDeleteRecord(rec._id)}
+                      className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-colors cursor-pointer border border-rose-500/20"
+                      title="Delete Record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    
+                    {activeTab === 'lend' && rec.status !== 'settled' && (
+                      <button
+                        onClick={() => handleCopyReminder(rec)}
+                        className="p-2 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl transition-all cursor-pointer border border-teal-500/20"
+                        title="Copy Payment Reminder Text"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
 
                   <button
                     onClick={() => openRepayments(rec)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold rounded-xl shadow-xs hover:shadow active:scale-[0.98] transition-all cursor-pointer ml-auto"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold rounded-xl shadow-xs hover:shadow active:scale-[0.98] transition-all cursor-pointer shrink-0"
                   >
                     <History className="w-3.5 h-3.5" />
                     {rec.status === 'settled' ? 'Payment Logs' : 'Repayments'}
