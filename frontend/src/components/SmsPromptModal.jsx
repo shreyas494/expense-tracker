@@ -58,7 +58,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
       const total = Number(amount)
       const halfMine = (total / 2).toFixed(2)
       setPersonalShare(halfMine)
-      const initialFriends = [{ id: 1, name: description.trim() || 'Friend 1', share: (total - Number(halfMine)).toFixed(2) }]
+      const initialFriends = [{ id: 1, name: '', share: (total - Number(halfMine)).toFixed(2) }]
       setSplitFriends(initialFriends)
     }
   }
@@ -71,7 +71,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const handleAddFriend = () => {
     const updated = [
       ...splitFriends,
-      { id: Date.now(), name: `Friend ${splitFriends.length + 1}`, share: '' }
+      { id: Date.now(), name: '', share: '' }
     ]
     setSplitFriends(autoDistributeShares(updated, amount, personalShare))
   }
@@ -283,7 +283,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xl rounded-3xl p-6 relative overflow-hidden z-10 text-slate-900 dark:text-white"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xl rounded-3xl p-5 sm:p-6 relative z-10 text-slate-900 dark:text-white custom-scrollbar my-auto"
       >
         <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
