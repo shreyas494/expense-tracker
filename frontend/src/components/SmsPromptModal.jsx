@@ -21,6 +21,11 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [selectedRecordId, setSelectedRecordId] = useState('')
   const [dueDate, setDueDate] = useState('')
 
+  // Bill Splitting State
+  const [isSplitBill, setIsSplitBill] = useState(false)
+  const [personalShare, setPersonalShare] = useState('')
+  const [personalCategory, setPersonalCategory] = useState('Food')
+
   const [description, setDescription] = useState(transaction.description || "")
   const [note, setNote] = useState(transaction.note || "")
   const [utr, setUtr] = useState(transaction.utr || "")
@@ -28,6 +33,15 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
   const [category, setCategory] = useState(transaction.category || (transaction.type === 'income' ? 'Salary' : 'Food'))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
+
+  // Auto-calculate default half personal share when split bill is toggled
+  const handleToggleSplitBill = (checked) => {
+    setIsSplitBill(checked)
+    if (checked && amount) {
+      const half = (Number(amount) / 2).toFixed(2)
+      setPersonalShare(half)
+    }
+  }
 
   // Fetch active Borrow/Lend records when switching to borrow or lend
   useEffect(() => {
@@ -74,20 +88,58 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           { headers }
         )
       } else if (nature === 'borrow' || nature === 'lend') {
+        const totalAmt = Number(amount) || transaction.amount || 0
+
         if (borrowLendAction === 'new') {
-          // Create New Ledger Entry
-          await axios.post(
-            `${API_BASE}/borrow-lend/add`,
-            {
-              type: nature,
-              person: description.trim() || 'Contact Person',
-              amount: Number(amount) || transaction.amount || 0,
-              description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
-              dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-              date: transaction.createdAt || transaction.date || new Date().toISOString()
-            },
-            { headers }
-          )
+          if (isSplitBill) {
+            const pShare = Number(personalShare) || 0
+            if (pShare >= totalAmt || pShare < 0) {
+              setError(`Personal share must be less than total amount (₹${totalAmt})`)
+              setIsSaving(false)
+              return
+            }
+            const netLentAmount = totalAmt - pShare
+
+            // 1. Log personal share as Expense
+            await axios.post(
+              `${API_BASE}/expense/add`,
+              {
+                description: `${description.trim() || 'Shared Bill'} (My Share)`,
+                amount: pShare,
+                category: personalCategory,
+                date: transaction.createdAt || transaction.date || new Date().toISOString()
+              },
+              { headers }
+            )
+
+            // 2. Log friend's share as Lend/Borrow
+            await axios.post(
+              `${API_BASE}/borrow-lend/add`,
+              {
+                type: nature,
+                person: description.trim() || 'Contact Person',
+                amount: netLentAmount,
+                description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
+                dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+                date: transaction.createdAt || transaction.date || new Date().toISOString()
+              },
+              { headers }
+            )
+          } else {
+            // Full amount as Borrow/Lend
+            await axios.post(
+              `${API_BASE}/borrow-lend/add`,
+              {
+                type: nature,
+                person: description.trim() || 'Contact Person',
+                amount: totalAmt,
+                description: note.trim() ? `${note.trim()}${utr ? ` (Ref: ${utr})` : ''}` : (utr ? `Ref: ${utr}` : ''),
+                dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+                date: transaction.createdAt || transaction.date || new Date().toISOString()
+              },
+              { headers }
+            )
+          }
         } else if (borrowLendAction === 'repay') {
           // Apply as Repayment to Existing Record
           if (!selectedRecordId) {
@@ -98,7 +150,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
           await axios.post(
             `${API_BASE}/borrow-lend/repay/${selectedRecordId}`,
             {
-              amount: Number(amount) || transaction.amount || 0,
+              amount: totalAmt,
               notes: note.trim() || description.trim() || 'Repayment via scanned receipt/alert',
               date: transaction.createdAt || transaction.date || new Date().toISOString()
             },
@@ -339,6 +391,72 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
                         </option>
                       ))}
                     </select>
+                  )}
+                </div>
+              )}
+
+              {/* Bill Split Option for New Entry */}
+              {borrowLendAction === 'new' && (
+                <div className="pt-2 border-t border-amber-500/20 space-y-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSplitBill}
+                      onChange={(e) => handleToggleSplitBill(e.target.checked)}
+                      className="w-4 h-4 rounded text-teal-500 focus:ring-teal-500 cursor-pointer"
+                    />
+                    <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                      Split Bill (I paid my share + friend's share)
+                    </span>
+                  </label>
+
+                  {isSplitBill && (
+                    <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-amber-500/30 space-y-2.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-slate-500 dark:text-slate-400">Total Scanned Bill:</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white">₹{amount || 0}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            My Personal Share (Expense)
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            value={personalShare}
+                            onChange={(e) => setPersonalShare(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 bg-slate-50 dark:bg-slate-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            {nature === 'lend' ? "Friend's Share (Lent)" : "Friend's Share (Borrow)"}
+                          </label>
+                          <div className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-extrabold text-teal-600 dark:text-teal-400 bg-slate-100 dark:bg-slate-800 flex items-center">
+                            ₹{Math.max(0, (Number(amount || 0) - Number(personalShare || 0))).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                          Category for My Personal Share
+                        </label>
+                        <select
+                          value={personalCategory}
+                          onChange={(e) => setPersonalCategory(e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-xs cursor-pointer"
+                        >
+                          {EXPENSE_CATEGORIES.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
