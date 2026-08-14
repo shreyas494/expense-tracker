@@ -505,33 +505,33 @@ const BorrowLendPage = () => {
 
                 {/* Description */}
                 <p className={borrowLendStyles.description}>
-                  {rec.description || <span className="text-gray-300 italic text-xs">No description provided</span>}
+                  {rec.description || <span className="text-slate-400 dark:text-slate-500 italic text-xs">No description provided</span>}
                 </p>
 
                 {/* Meta / Due Date */}
                 <div className={borrowLendStyles.metaInfo}>
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
                   <span>
                     {rec.dueDate ? (
-                      <>Due: <span className="font-semibold">{new Date(rec.dueDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span></>
+                      <>Due: <span className="font-semibold text-slate-700 dark:text-slate-300">{new Date(rec.dueDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span></>
                     ) : (
-                      <span className="italic text-gray-400">No due date</span>
+                      <span className="italic text-slate-400 dark:text-slate-500">No due date</span>
                     )}
                   </span>
                 </div>
 
                 {/* Card Actions */}
-                <div className="flex gap-2 mt-6 pt-4 border-t border-gray-100 justify-end">
+                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 justify-end items-center">
                   <button
                     onClick={() => openEditModal(rec)}
-                    className="p-2 bg-gray-50 hover:bg-teal-50 text-gray-500 hover:text-teal-600 rounded-lg transition-colors cursor-pointer border border-gray-100"
+                    className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500/10 text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
                     title="Edit Record Details"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteRecord(rec._id)}
-                    className="p-2 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-lg transition-colors cursor-pointer border border-gray-100"
+                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl transition-colors cursor-pointer border border-rose-500/20"
                     title="Delete Record"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -540,7 +540,7 @@ const BorrowLendPage = () => {
                   {activeTab === 'lend' && rec.status !== 'settled' && (
                     <button
                       onClick={() => handleCopyReminder(rec)}
-                      className="p-2 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-lg transition-all cursor-pointer border border-teal-100"
+                      className="p-2 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl transition-all cursor-pointer border border-teal-500/20"
                       title="Copy Payment Reminder Text"
                     >
                       <Send className="w-4 h-4" />
@@ -549,7 +549,7 @@ const BorrowLendPage = () => {
 
                   <button
                     onClick={() => openRepayments(rec)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer ml-auto"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold rounded-xl shadow-xs hover:shadow active:scale-[0.98] transition-all cursor-pointer ml-auto"
                   >
                     <History className="w-3.5 h-3.5" />
                     {rec.status === 'settled' ? 'Payment Logs' : 'Repayments'}
@@ -569,7 +569,7 @@ const BorrowLendPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10"
+              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar my-auto p-5 sm:p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10 text-slate-900 dark:text-white"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
                 <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
@@ -718,7 +718,7 @@ const BorrowLendPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10"
+              className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar my-auto p-5 sm:p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 relative z-10 text-slate-900 dark:text-white"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>

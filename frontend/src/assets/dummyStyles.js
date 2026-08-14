@@ -599,41 +599,40 @@ export const borrowLendStyles = {
   headerContainer: "flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6",
   title: "text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5",
   subtitle: "text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400",
-  tabContainer: "flex border-b border-slate-200 dark:border-slate-800 mb-6 gap-2",
-  tabButton: (isActive) => `px-5 py-2.5 font-bold text-xs transition-all border-b-2 cursor-pointer ${
+  tabContainer: "flex border-b border-slate-200 dark:border-slate-800 mb-6 gap-2 overflow-x-auto custom-scrollbar",
+  tabButton: (isActive) => `px-5 py-2.5 font-extrabold text-xs transition-all border-b-2 cursor-pointer whitespace-nowrap ${
     isActive 
       ? "border-teal-500 text-teal-600 dark:text-teal-400" 
       : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
   }`,
   statsGrid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6",
-  statCard: "bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 shadow-sm",
-  statTitle: "text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider",
-  statVal: "text-xl font-extrabold text-slate-900 dark:text-white mt-1",
-  statIcon: (color) => `p-2.5 rounded-xl bg-${color}-500/10 text-${color}-600 dark:text-${color}-400 shrink-0`,
-  actionBar: "bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 shadow-sm",
+  statCard: "bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 shadow-sm overflow-hidden",
+  statTitle: "text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate",
+  statVal: "text-xl font-extrabold text-slate-900 dark:text-white mt-1 truncate",
+  actionBar: "bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 shadow-sm",
   statusBadge: (status) => {
     switch (status) {
       case 'settled':
-        return "px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+        return "px-2.5 py-1 text-[11px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0";
       case 'partially_paid':
-        return "px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+        return "px-2.5 py-1 text-[11px] font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0";
       default:
-        return "px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20";
+        return "px-2.5 py-1 text-[11px] font-extrabold rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0";
     }
   },
-  overdueBadge: "px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse inline-block mt-1",
-  dueSoonBadge: "px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 inline-block mt-1",
+  overdueBadge: "px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse inline-block mt-1 truncate max-w-full",
+  dueSoonBadge: "px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 inline-block mt-1 truncate max-w-full",
   cardList: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5",
-  itemCard: "bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden",
-  cardHeader: "flex justify-between items-start mb-3",
-  personName: "text-base font-bold text-slate-900 dark:text-white truncate",
-  amountLabel: "text-[10px] font-bold uppercase tracking-wider text-slate-400",
-  amountVal: "text-xl font-black text-slate-900 dark:text-white",
-  remainingVal: "text-xs font-bold text-teal-600 dark:text-teal-400 mt-0.5",
-  description: "text-xs font-medium text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 min-h-[36px]",
-  metaInfo: "flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-4",
-  repaymentItem: "flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold",
-  repaymentNotes: "text-[10px] text-slate-400 block mt-0.5"
+  itemCard: "bg-white dark:bg-slate-900 p-5 md:p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden",
+  cardHeader: "flex justify-between items-start mb-3 gap-2",
+  personName: "text-base md:text-lg font-extrabold text-slate-900 dark:text-white truncate max-w-full",
+  amountLabel: "text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500",
+  amountVal: "text-base md:text-lg font-black text-slate-900 dark:text-white truncate",
+  remainingVal: "text-xs font-extrabold text-teal-600 dark:text-teal-400 mt-0.5 truncate",
+  description: "text-xs font-semibold text-slate-600 dark:text-slate-300 mt-2 line-clamp-2 min-h-[36px] break-words",
+  metaInfo: "flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mt-3 truncate",
+  repaymentItem: "flex justify-between items-center py-2.5 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold gap-2",
+  repaymentNotes: "text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5 truncate max-w-[160px]"
 };
 
 export const challengeStyles = {
