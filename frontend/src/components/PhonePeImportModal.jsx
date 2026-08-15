@@ -128,6 +128,76 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
     }
   }
 
+  const [pipWindow, setPipWindow] = useState(null)
+
+  const openFloatingPiPDialog = async () => {
+    try {
+      // Start background screen stream first
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        })
+        mediaStreamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(e => console.warn("Video play error:", e))
+        }
+      }
+
+      setIsCapturing(true)
+      setCapturedFrames([])
+
+      if ('documentPictureInPicture' in window) {
+        const pipWin = await window.documentPictureInPicture.requestWindow({
+          width: 320,
+          height: 220,
+        })
+        
+        const pipDoc = pipWin.document
+        pipDoc.body.style.margin = '0'
+        pipDoc.body.style.fontFamily = 'system-ui, sans-serif'
+        pipDoc.body.style.background = '#0f172a'
+        pipDoc.body.style.color = '#ffffff'
+        pipDoc.body.style.display = 'flex'
+        pipDoc.body.style.flexDirection = 'column'
+        pipDoc.body.style.alignItems = 'center'
+        pipDoc.body.style.justifyContent = 'center'
+        pipDoc.body.style.padding = '16px'
+        pipDoc.body.style.textAlign = 'center'
+
+        pipDoc.body.innerHTML = `
+          <div style="font-weight: 800; font-size: 13px; margin-bottom: 6px; color: #c084fc;">🟣 PhonePe In-App Scanner</div>
+          <p style="font-size: 11px; color: #94a3b8; margin: 0 0 12px 0;">Floating over PhonePe app</p>
+          <button id="pipSnapBtn" style="background: #9333ea; color: white; border: none; padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 12px; cursor: pointer; width: 100%; margin-bottom: 8px;">📸 Snap Screenshot (0)</button>
+          <button id="pipScanBtn" style="background: #0d9488; color: white; border: none; padding: 8px 14px; border-radius: 12px; font-weight: 800; font-size: 11px; cursor: pointer; width: 100%;">⚡ Scan All & Import ➔</button>
+        `
+
+        let count = 0
+        pipDoc.getElementById('pipSnapBtn').onclick = async () => {
+          await snapScreenFrame()
+          count++
+          const btn = pipDoc.getElementById('pipSnapBtn')
+          if (btn) btn.innerText = `📸 Snap Screenshot (${count})`
+        }
+
+        pipDoc.getElementById('pipScanBtn').onclick = () => {
+          pipWin.close()
+          stopCaptureAndProcess()
+        }
+
+        setPipWindow(pipWin)
+      }
+
+      // Launch PhonePe App
+      window.location.href = "phonepe://home"
+    } catch (err) {
+      console.warn("Floating PiP dialog launch error:", err)
+      // Fallback
+      window.location.href = "phonepe://home"
+    }
+  }
+
   const startScreenCaptureOverlay = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
@@ -321,25 +391,15 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
                   </p>
                 </div>
                 <div className="space-y-2 mt-3">
-                  <a
-                    href="phonepe://home"
-                    onClick={(e) => e.stopPropagation()}
+                  <button
+                    type="button"
+                    onClick={openFloatingPiPDialog}
                     className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                    title="Launch PhonePe App directly on your phone"
+                    title="Launch PhonePe with Floating In-App Screenshot Dialog"
                   >
-                    <span>Open PhonePe App ↗</span>
-                  </a>
-                  {typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function' && (
-                    <button
-                      type="button"
-                      onClick={startScreenCaptureOverlay}
-                      className="w-full py-2 px-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-extrabold rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                      title="Launch floating screen snapper widget on desktop"
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                      <span>📸 Floating Screen Snapper</span>
-                    </button>
-                  )}
+                    <Camera className="w-4 h-4" />
+                    <span>Open PhonePe with Floating Dialog ↗</span>
+                  </button>
                 </div>
               </div>
 
