@@ -29,6 +29,28 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkAndStartService();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        checkAndStartService();
+    }
+
+    private void checkAndStartService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(this)) {
+                startFloatingService();
+            }
+        } else {
+            startFloatingService();
+        }
+    }
+
     private void startFloatingService() {
         try {
             Intent intent = new Intent(this, FloatingWidgetService.class);

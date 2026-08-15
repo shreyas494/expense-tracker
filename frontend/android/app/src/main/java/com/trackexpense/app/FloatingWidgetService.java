@@ -88,53 +88,65 @@ public class FloatingWidgetService extends Service {
         android.widget.LinearLayout capsuleLayout = new android.widget.LinearLayout(this);
         capsuleLayout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
         capsuleLayout.setGravity(Gravity.CENTER_VERTICAL);
-        capsuleLayout.setPadding(20, 14, 20, 14);
+        capsuleLayout.setPadding(16, 10, 16, 10);
 
         // Glassmorphic background
         android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
         containerBg.setColor(Color.parseColor("#f00f172a")); // Dark slate translucent
         containerBg.setCornerRadius(80f);
-        containerBg.setStroke(4, Color.parseColor("#9333ea")); // Neon purple border
+        containerBg.setStroke(3, Color.parseColor("#a855f7")); // Neon purple border
         capsuleLayout.setBackground(containerBg);
 
-        // 1. Snap Button (Purple Pill)
-        final Button snapBtn = new Button(this);
+        // 1. Snap TextView (Purple Capsule Pill)
+        final TextView snapBtn = new TextView(this);
         snapBtn.setText("📸 Snap (0)");
         snapBtn.setTextColor(Color.WHITE);
-        snapBtn.setTextSize(12f);
+        snapBtn.setTextSize(11f);
+        snapBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+        snapBtn.setGravity(Gravity.CENTER);
         android.graphics.drawable.GradientDrawable snapBg = new android.graphics.drawable.GradientDrawable();
         snapBg.setColor(Color.parseColor("#9333ea"));
-        snapBg.setCornerRadius(50f);
+        snapBg.setCornerRadius(40f);
         snapBtn.setBackground(snapBg);
-        snapBtn.setPadding(26, 14, 26, 14);
+        snapBtn.setPadding(22, 12, 22, 12);
+        snapBtn.setClickable(true);
+        snapBtn.setFocusable(true);
 
-        // 2. Save & Process Button (Teal Pill)
-        final Button saveBtn = new Button(this);
+        // 2. Save & Import TextView (Teal Capsule Pill)
+        final TextView saveBtn = new TextView(this);
         saveBtn.setText("⚡ Save & Import");
         saveBtn.setTextColor(Color.WHITE);
-        saveBtn.setTextSize(12f);
+        saveBtn.setTextSize(11f);
+        saveBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+        saveBtn.setGravity(Gravity.CENTER);
         android.graphics.drawable.GradientDrawable saveBg = new android.graphics.drawable.GradientDrawable();
         saveBg.setColor(Color.parseColor("#0d9488"));
-        saveBg.setCornerRadius(50f);
+        saveBg.setCornerRadius(40f);
         saveBtn.setBackground(saveBg);
-        saveBtn.setPadding(26, 14, 26, 14);
+        saveBtn.setPadding(22, 12, 22, 12);
+        saveBtn.setClickable(true);
+        saveBtn.setFocusable(true);
         android.widget.LinearLayout.LayoutParams saveParams = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        saveParams.setMargins(14, 0, 14, 0);
+        saveParams.setMargins(10, 0, 10, 0);
         saveBtn.setLayoutParams(saveParams);
 
-        // 3. Close Button (Red Circle)
-        final Button closeBtn = new Button(this);
-        closeBtn.setText("✖");
+        // 3. Close TextView (Small Red Circle Icon)
+        final TextView closeBtn = new TextView(this);
+        closeBtn.setText("✕");
         closeBtn.setTextColor(Color.WHITE);
-        closeBtn.setTextSize(14f);
+        closeBtn.setTextSize(12f);
+        closeBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+        closeBtn.setGravity(Gravity.CENTER);
         android.graphics.drawable.GradientDrawable closeBg = new android.graphics.drawable.GradientDrawable();
-        closeBg.setColor(Color.parseColor("#ef4444"));
-        closeBg.setCornerRadius(50f);
+        closeBg.setColor(Color.parseColor("#dc2626"));
+        closeBg.setCornerRadius(30f);
         closeBtn.setBackground(closeBg);
-        closeBtn.setPadding(18, 10, 18, 10);
+        closeBtn.setPadding(14, 10, 14, 10);
+        closeBtn.setClickable(true);
+        closeBtn.setFocusable(true);
 
         // Add views to container
         capsuleLayout.addView(snapBtn);
