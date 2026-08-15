@@ -203,13 +203,21 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                     className="hidden"
                   />
                   <button
+                    onClick={() => { window.location.href = "phonepe://" }}
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer flex items-center gap-1 border border-indigo-500/20 shadow-xs shrink-0"
+                    title="Launch PhonePe App directly on your phone"
+                  >
+                    <span>Open PhonePe ↗</span>
+                  </button>
+
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
-                    title="Scan Receipt Photo or PhonePe Screenshot"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1 border border-teal-500/20 shadow-xs shrink-0"
+                    title="Scan Receipt Photo or Screenshot"
                   >
-                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="inline font-extrabold">{isUploading ? 'Scanning...' : 'Scan / PhonePe'}</span>
+                    <Camera className="w-3.5 h-3.5" />
+                    <span className="inline font-extrabold">{isUploading ? 'Scanning...' : 'Scan Receipt'}</span>
                   </button>
 
                   <button
