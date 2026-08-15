@@ -3,7 +3,7 @@ import { navbarStyles } from '../assets/dummyStyles'
 import img1 from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { ChevronDown, Sun, Moon, Camera } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Camera, Layers } from 'lucide-react';
 import { User } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import axios from 'axios';
@@ -11,6 +11,7 @@ import axios from 'axios';
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanReceiptWithOCR, compressImageForMobile } from '../utils/ocrParser';
+import PhonePeImportModal from './PhonePeImportModal';
 
 const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
@@ -20,6 +21,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const fileInputRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isPhonePeModalOpen, setIsPhonePeModalOpen] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
@@ -204,10 +206,10 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
                     className="px-2.5 sm:px-3.5 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
-                    title="Upload & Scan Receipt Screenshot"
+                    title="Scan Receipt Photo or PhonePe Screenshot"
                   >
                     <Camera className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isUploading ? 'Scanning...' : 'Scan Receipt'}</span>
+                    <span className="hidden sm:inline">{isUploading ? 'Scanning...' : 'Scan / PhonePe'}</span>
                   </button>
 
                   <button
@@ -267,6 +269,13 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                                 <span>my profile</span>
                             </button>
 
+                            <button onClick={() => {
+                                setMenuOpen(false);
+                                setIsPhonePeModalOpen(true);
+                            }} className={navbarStyles.menuItem}>
+                                <Layers className=" w-4 h-4 text-indigo-500"/>
+                                <span>Batch Import PhonePe</span>
+                            </button>
                         </div>
                         <div className={navbarStyles.menuItemBorder}>
                           <button onClick={handleLogout} className={navbarStyles.logoutButton}>
@@ -338,6 +347,12 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PhonePeImportModal
+        isOpen={isPhonePeModalOpen}
+        onClose={() => setIsPhonePeModalOpen(false)}
+        onImportComplete={() => window.location.reload()}
+      />
     </header>
   )
 }
