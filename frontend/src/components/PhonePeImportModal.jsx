@@ -200,29 +200,27 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
 
   const startScreenCaptureOverlay = async () => {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        alert("Live Screen Capture API is not supported on this browser version.")
-        return
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        })
+
+        mediaStreamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(e => console.warn("Video play error:", e))
+        }
+
+        setIsCapturing(true)
+        setCapturedFrames([])
       }
 
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false
-      })
-
-      mediaStreamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.play().catch(e => console.warn("Video play error:", e))
-      }
-
-      setIsCapturing(true)
-      setCapturedFrames([])
-
-      // Launch PhonePe App
+      // Launch PhonePe App silently
       window.location.href = "phonepe://home"
     } catch (err) {
-      console.warn("Screen capture permission denied:", err)
+      console.warn("Screen capture error:", err)
+      window.location.href = "phonepe://home"
     }
   }
 
