@@ -31,6 +31,9 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
         if (window.location.hash === '#phonepe-import') {
           setIsPhonePeModalOpen(true);
           window.location.hash = '';
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('phonepe_auto_trigger'));
+          }, 400);
         }
       };
       window.addEventListener('hashchange', handleHashChange);

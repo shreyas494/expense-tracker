@@ -30,6 +30,16 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
     }
   }, [isOpen, capturedFrames])
 
+  React.useEffect(() => {
+    const handleAutoTrigger = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.click()
+      }
+    }
+    window.addEventListener('phonepe_auto_trigger', handleAutoTrigger)
+    return () => window.removeEventListener('phonepe_auto_trigger', handleAutoTrigger)
+  }, [])
+
   if (!isOpen) return null
 
   const processFiles = async (files) => {
