@@ -3,7 +3,7 @@ import { navbarStyles } from '../assets/dummyStyles'
 import img1 from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { ChevronDown, Sun, Moon, Camera, Upload, MessageSquare, Clipboard } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Camera, Upload, MessageSquare, Clipboard, Layers } from 'lucide-react';
 import { User } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import axios from 'axios';
@@ -11,6 +11,7 @@ import axios from 'axios';
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanReceiptWithOCR, compressImageForMobile } from '../utils/ocrParser';
+import PhonePeImportModal from './PhonePeImportModal';
 
 const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
@@ -21,6 +22,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isPastingSms, setIsPastingSms] = useState(false);
+    const [isPhonePeModalOpen, setIsPhonePeModalOpen] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
@@ -212,6 +214,15 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   </button>
 
                   <button
+                    onClick={() => setIsPhonePeModalOpen(true)}
+                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-indigo-500/20 shadow-xs shrink-0"
+                    title="Batch Import Multiple PhonePe / UPI Screenshots"
+                  >
+                    <Layers className="w-4 h-4" />
+                    <span className="hidden sm:inline">Import PhonePe</span>
+                  </button>
+
+                  <button
                     onClick={handlePasteSms}
                     disabled={isPastingSms}
                     className="px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-amber-500/20 shadow-xs shrink-0"
@@ -349,6 +360,12 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PhonePeImportModal
+        isOpen={isPhonePeModalOpen}
+        onClose={() => setIsPhonePeModalOpen(false)}
+        onImportComplete={() => window.location.reload()}
+      />
     </header>
   )
 }
