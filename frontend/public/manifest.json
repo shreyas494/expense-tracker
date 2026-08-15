@@ -2,11 +2,25 @@
   "name": "TrackExpense - Smart Expense Tracker",
   "short_name": "TrackExpense",
   "description": "Track your incomes, expenses, borrow & lend, and financial goals effortlessly.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0d9488",
   "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/favicon.svg",
       "sizes": "192x192 512x512",
@@ -33,17 +47,29 @@
   "shortcuts": [
     {
       "name": "Add New Expense",
-      "short_name": "New Expense",
+      "short_name": "Add Expense",
       "description": "Log a new expense entry immediately",
       "url": "/expense?action=new",
-      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Borrow & Lend",
       "short_name": "Borrow/Lend",
       "description": "View and manage debts and receivables",
       "url": "/borrow-lend",
-      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
