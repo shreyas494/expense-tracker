@@ -452,30 +452,30 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
 
         {/* Scanning Queue */}
         {isScanning && (
-          <div className="space-y-4 text-center py-8">
-            <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-2xl bg-indigo-500/20 animate-ping opacity-75" />
-              <div className="relative w-16 h-16 bg-indigo-500/10 text-indigo-500 border border-indigo-500/30 rounded-2xl flex items-center justify-center shadow-lg">
-                <Camera className="w-8 h-8 animate-pulse" />
+          <div className="space-y-5 text-center py-6 px-4 bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/20 rounded-3xl">
+            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-3xl bg-purple-500/20 animate-ping opacity-75" />
+              <div className="relative w-20 h-20 bg-purple-600 text-white rounded-3xl flex items-center justify-center shadow-xl shadow-purple-500/30">
+                <Camera className="w-10 h-10 animate-pulse" />
               </div>
             </div>
             <div>
               <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Batch Scanning PhonePe Screenshots...
+                ⚡ AI Scanning PhonePe Receipts...
               </h4>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                {statusText}
+              <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mt-1 animate-pulse">
+                {statusText || "Extracting merchant names, UPI amounts, and dates..."}
               </p>
             </div>
-            <div className="max-w-xs mx-auto space-y-1">
-              <div className="flex justify-between text-xs font-extrabold text-slate-600 dark:text-slate-400">
-                <span>Progress</span>
-                <span className="font-mono text-indigo-600 dark:text-indigo-400">{scanProgress}%</span>
+            <div className="max-w-sm mx-auto space-y-2">
+              <div className="flex justify-between text-xs font-black text-slate-700 dark:text-slate-300">
+                <span>AI OCR Scan Progress</span>
+                <span className="font-mono text-purple-600 dark:text-purple-400 text-sm font-black">{scanProgress}%</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-300 dark:border-slate-700 p-0.5 shadow-inner">
                 <div
-                  className="bg-indigo-600 h-full rounded-full transition-all duration-300"
-                  style={{ width: `${scanProgress}%` }}
+                  className="bg-gradient-to-r from-purple-600 via-indigo-500 to-teal-400 h-full rounded-full transition-all duration-300 shadow-md"
+                  style={{ width: `${Math.max(scanProgress, 8)}%` }}
                 />
               </div>
             </div>
