@@ -189,12 +189,12 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                 <div className={navbarStyles.logoImage}>
                     <img src={img1} alt="Expense Tracker Logo" className={navbarStyles.logo}/>
                 </div>
-                <span className="hidden sm:inline text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">Expense Tracker</span>
+                <span className={navbarStyles.logoText}>Expense Tracker</span>
             </div>
 
             {/* if the user is present */}
             {user && (
-                <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -202,30 +202,35 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                     onChange={handleReceiptUpload}
                     className="hidden"
                   />
+
+                  {/* PhonePe App Icon Button */}
                   <button
                     onClick={() => { window.location.href = "phonepe://" }}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer flex items-center gap-1 border border-indigo-500/20 shadow-xs shrink-0"
-                    title="Launch PhonePe App directly on your phone"
+                    className="w-9 h-9 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-xs active:scale-95"
+                    title="Open PhonePe App"
                   >
-                    <span>Open PhonePe ↗</span>
+                    <span className="w-5 h-5 rounded-lg bg-purple-600 text-white font-black text-[10px] flex items-center justify-center tracking-tighter shadow-xs">
+                      Pe
+                    </span>
                   </button>
 
+                  {/* Camera / Gallery Scan Icon Button */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1 border border-teal-500/20 shadow-xs shrink-0"
-                    title="Scan Receipt Photo or Screenshot"
+                    className="w-9 h-9 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-xs active:scale-95 text-teal-600 dark:text-teal-400"
+                    title="Scan Receipt Photo or Screenshot from Gallery"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span className="inline font-extrabold">{isUploading ? 'Scanning...' : 'Scan Receipt'}</span>
+                    <Camera className="w-5 h-5" />
                   </button>
 
+                  {/* Theme Toggle Icon Button */}
                   <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                    className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center shrink-0 active:scale-95"
                     title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   >
-                    {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />}
+                    {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
                   </button>
 
                   <div className={navbarStyles.userContainer} ref={menuRef}>
