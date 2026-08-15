@@ -44,18 +44,18 @@ public class MainActivity extends BridgeActivity {
         handleBatchImportIntent(intent);
     }
 
-    private void handleBatchImportIntent(Intent intent) {
+    private void handleBatchImportIntent(final Intent intent) {
         if (intent != null && intent.getBooleanExtra("open_batch_import", false)) {
             if (this.bridge != null && this.bridge.getWebView() != null) {
-                this.bridge.getWebView().post(new Runnable() {
+                this.bridge.getWebView().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         bridge.getWebView().evaluateJavascript(
-                            "window.location.hash = 'phonepe-import'; window.dispatchEvent(new Event('hashchange'));",
+                            "window.location.hash = 'phonepe-import-" + System.currentTimeMillis() + "'; window.dispatchEvent(new CustomEvent('phonepe_auto_trigger'));",
                             null
                         );
                     }
-                });
+                }, 500);
             }
         }
     }

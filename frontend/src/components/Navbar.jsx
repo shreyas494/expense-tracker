@@ -27,20 +27,32 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
     useEffect(() => {
-      const handleHashChange = () => {
-        if (window.location.hash === '#phonepe-import') {
-          setIsPhonePeModalOpen(true);
+      const handleTrigger = () => {
+        setIsPhonePeModalOpen(true);
+        setTimeout(() => {
+          const fileInput = document.getElementById('phonepeFileInput');
+          if (fileInput) fileInput.click();
+        }, 300);
+      };
+
+      const handleHashCheck = () => {
+        if (window.location.hash.includes('phonepe-import')) {
+          handleTrigger();
           window.location.hash = '';
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('phonepe_auto_trigger'));
-          }, 400);
         }
       };
-      window.addEventListener('hashchange', handleHashChange);
-      if (window.location.hash === '#phonepe-import') {
-        handleHashChange();
+
+      window.addEventListener('phonepe_auto_trigger', handleTrigger);
+      window.addEventListener('hashchange', handleHashCheck);
+
+      if (window.location.hash.includes('phonepe-import')) {
+        handleHashCheck();
       }
-      return () => window.removeEventListener('hashchange', handleHashChange);
+
+      return () => {
+        window.removeEventListener('phonepe_auto_trigger', handleTrigger);
+        window.removeEventListener('hashchange', handleHashCheck);
+      };
     }, []);
 
     const handleOpenPhonePe = (e) => {

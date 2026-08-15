@@ -395,6 +395,7 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
           <div className="space-y-4">
             <input
               type="file"
+              id="phonepeFileInput"
               ref={fileInputRef}
               multiple
               accept="image/*"
