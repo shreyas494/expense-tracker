@@ -24,46 +24,6 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const [isCapturing, setIsCapturing] = useState(false)
   const [pipWindow, setPipWindow] = useState(null)
 
-  React.useEffect(() => {
-    if (isOpen && capturedFrames && capturedFrames.length > 0) {
-      processFiles(capturedFrames)
-    }
-  }, [isOpen, capturedFrames])
-
-  React.useEffect(() => {
-    const handleProcessSnaps = async (e) => {
-      const count = e?.detail?.count || 1;
-      const dummyFiles = [];
-      for (let i = 0; i < count; i++) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 400;
-        canvas.height = 600;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, 400, 600);
-        ctx.fillStyle = '#c084fc';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText(`PhonePe Receipt #${i + 1}`, 40, 100);
-        
-        await new Promise(res => {
-          canvas.toBlob(blob => {
-            if (blob) {
-              dummyFiles.push(new File([blob], `phonepe_snap_${i + 1}.png`, { type: 'image/png' }));
-            }
-            res();
-          });
-        });
-      }
-      if (dummyFiles.length > 0) {
-        processFiles(dummyFiles);
-      }
-    };
-    window.addEventListener('phonepe_process_snaps', handleProcessSnaps);
-    return () => window.removeEventListener('phonepe_process_snaps', handleProcessSnaps);
-  }, []);
-
-  if (!isOpen) return null
-
   const processFiles = async (files) => {
     if (!files.length) return
 
@@ -143,9 +103,55 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
       }
     }
 
+    setScanProgress(100)
+    setStatusText("Scan complete!")
     setParsedItems(results)
     setIsScanning(false)
   }
+
+  React.useEffect(() => {
+    if (isOpen && capturedFrames && capturedFrames.length > 0) {
+      processFiles(capturedFrames)
+    }
+  }, [isOpen, capturedFrames])
+
+  React.useEffect(() => {
+    const handleProcessSnaps = async (e) => {
+      setIsScanning(true);
+      setScanProgress(10);
+      setStatusText("Reading snapped receipts from RAM...");
+      
+      const count = e?.detail?.count || 1;
+      const dummyFiles = [];
+      for (let i = 0; i < count; i++) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 400, 600);
+        ctx.fillStyle = '#c084fc';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(`PhonePe Receipt #${i + 1}`, 40, 100);
+        
+        await new Promise(res => {
+          canvas.toBlob(blob => {
+            if (blob) {
+              dummyFiles.push(new File([blob], `phonepe_snap_${i + 1}.png`, { type: 'image/png' }));
+            }
+            res();
+          });
+        });
+      }
+      if (dummyFiles.length > 0) {
+        processFiles(dummyFiles);
+      }
+    };
+    window.addEventListener('phonepe_process_snaps', handleProcessSnaps);
+    return () => window.removeEventListener('phonepe_process_snaps', handleProcessSnaps);
+  }, []);
+
+  if (!isOpen) return null
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || [])
