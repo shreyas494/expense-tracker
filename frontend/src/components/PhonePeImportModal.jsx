@@ -10,6 +10,9 @@ const CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Entertainment',
 
 const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const fileInputRef = useRef(null)
+  const mediaStreamRef = useRef(null)
+  const videoRef = useRef(null)
+
   const [selectedFiles, setSelectedFiles] = useState([])
   const [isScanning, setIsScanning] = useState(false)
   const [scanProgress, setScanProgress] = useState(0)
@@ -17,6 +20,8 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const [statusText, setStatusText] = useState('')
   const [parsedItems, setParsedItems] = useState([])
   const [isImporting, setIsImporting] = useState(false)
+  const [capturedFrames, setCapturedFrames] = useState([])
+  const [isCapturing, setIsCapturing] = useState(false)
 
   if (!isOpen) return null
 
@@ -122,11 +127,6 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
       alert("Please allow clipboard permission to read RAM screenshots!")
     }
   }
-
-  const [capturedFrames, setCapturedFrames] = useState([])
-  const [isCapturing, setIsCapturing] = useState(false)
-  const mediaStreamRef = useRef(null)
-  const videoRef = useRef(null)
 
   const startScreenCaptureOverlay = async () => {
     try {
