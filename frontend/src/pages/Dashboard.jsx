@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useOutletContext, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Percent, Calendar } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Percent, Calendar, Wallet } from 'lucide-react'
 import axios from 'axios'
 
 const Dashboard = () => {
@@ -39,13 +39,13 @@ const Dashboard = () => {
       else expenses += amt
     })
 
-    const savings = income - expenses
-    const savingsRate = income > 0 ? Math.round((savings / income) * 100) : 0
+    const totalBalance = income - expenses
+    const savingsRate = income > 0 ? Math.max(0, Math.round((totalBalance / income) * 100)) : 0
 
     return {
+      totalBalance,
       income,
       expenses,
-      savings,
       savingsRate
     }
   }, [transactions])
@@ -135,48 +135,56 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Mini Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-            <span>Total Income</span>
+      {/* Mini Stats Grid: 2 columns on Mobile, 4 columns on Desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Box 1: Total Balance */}
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Balance</span>
+            <div className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-500 flex items-center justify-center">
+              <Wallet className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
+          <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-2 tracking-tight">
+            ₹{metrics.totalBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+
+        {/* Box 2: Monthly Income */}
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Income</span>
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-2 tracking-tight">
             ₹{metrics.income.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <TrendingDown className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-            <span>Total Expenses</span>
+        {/* Box 3: Monthly Expense */}
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Expense</span>
+            <div className="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <TrendingDown className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
+          <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-2 tracking-tight">
             ₹{metrics.expenses.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-            {metrics.savings >= 0 ? (
-              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-            ) : (
-              <ArrowDownRight className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-            )}
-            <span>Net Savings</span>
+        {/* Box 4: Savings Rate */}
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Savings Rate</span>
+            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
+              <Percent className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <p className={`text-xl md:text-2xl font-extrabold mt-1.5 tracking-tight ${metrics.savings >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-            ₹{metrics.savings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <Percent className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400 shrink-0" />
-            <span>Savings Rate</span>
-          </div>
-          <p className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
+          <p className="text-base sm:text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mt-2 tracking-tight">
             {metrics.savingsRate}%
           </p>
         </div>
