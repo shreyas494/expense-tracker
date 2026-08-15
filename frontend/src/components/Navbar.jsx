@@ -3,7 +3,7 @@ import { navbarStyles } from '../assets/dummyStyles'
 import img1 from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { ChevronDown, Sun, Moon, Camera, Upload, MessageSquare, Clipboard, Layers } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Camera } from 'lucide-react';
 import { User } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import axios from 'axios';
@@ -11,7 +11,6 @@ import axios from 'axios';
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanReceiptWithOCR, compressImageForMobile } from '../utils/ocrParser';
-import PhonePeImportModal from './PhonePeImportModal';
 
 const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
 
@@ -21,8 +20,6 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const fileInputRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [isPastingSms, setIsPastingSms] = useState(false);
-    const [isPhonePeModalOpen, setIsPhonePeModalOpen] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
@@ -195,7 +192,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
             {/* if the user is present */}
             {user && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -206,7 +203,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
+                    className="px-2.5 sm:px-3.5 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
                     title="Upload & Scan Receipt Screenshot"
                   >
                     <Camera className="w-4 h-4" />
@@ -214,30 +211,11 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   </button>
 
                   <button
-                    onClick={() => setIsPhonePeModalOpen(true)}
-                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-indigo-500/20 shadow-xs shrink-0"
-                    title="Batch Import Multiple PhonePe / UPI Screenshots"
-                  >
-                    <Layers className="w-4 h-4" />
-                    <span className="hidden sm:inline">Import PhonePe</span>
-                  </button>
-
-                  <button
-                    onClick={handlePasteSms}
-                    disabled={isPastingSms}
-                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-amber-500/20 shadow-xs shrink-0"
-                    title="Paste Copied Bank SMS Text or UPI Alert"
-                  >
-                    <Clipboard className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isPastingSms ? 'Pasting...' : 'Paste SMS'}</span>
-                  </button>
-
-                  <button
                     onClick={toggleTheme}
-                    className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
+                    className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center shrink-0"
                     title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   >
-                    {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+                    {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />}
                   </button>
 
                   <div className={navbarStyles.userContainer} ref={menuRef}>
@@ -360,12 +338,6 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <PhonePeImportModal
-        isOpen={isPhonePeModalOpen}
-        onClose={() => setIsPhonePeModalOpen(false)}
-        onImportComplete={() => window.location.reload()}
-      />
     </header>
   )
 }
