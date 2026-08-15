@@ -3,7 +3,7 @@ import { navbarStyles } from '../assets/dummyStyles'
 import img1 from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { ChevronDown, Sun, Moon, Camera, Upload } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Camera, Upload, MessageSquare, Clipboard } from 'lucide-react';
 import { User } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import axios from 'axios';
@@ -20,8 +20,47 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const fileInputRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isPastingSms, setIsPastingSms] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
+
+    const handlePasteSms = async () => {
+      try {
+        let clipboardText = '';
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          try {
+            clipboardText = await navigator.clipboard.readText();
+          } catch (cErr) {
+            console.warn("Clipboard permission denied or unavailable:", cErr);
+          }
+        }
+
+        if (!clipboardText) {
+          clipboardText = window.prompt("Paste your Bank SMS text or UPI alert message here:");
+        }
+
+        if (!clipboardText || !clipboardText.trim()) return;
+
+        setIsPastingSms(true);
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const res = await axios.post(
+          `${BASE_URL}/expense/sms-webhook`,
+          { text: clipboardText.trim() },
+          { headers }
+        );
+
+        if (res.data.success) {
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error("SMS paste error:", err);
+        alert("Failed to parse SMS text. Please ensure it contains a transaction amount.");
+      } finally {
+        setIsPastingSms(false);
+      }
+    };
 
     const handleReceiptUpload = async (e) => {
       const file = e.target.files?.[0];
@@ -165,11 +204,21 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs"
+                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
                     title="Upload & Scan Receipt Screenshot"
                   >
                     <Camera className="w-4 h-4" />
                     <span className="hidden sm:inline">{isUploading ? 'Scanning...' : 'Scan Receipt'}</span>
+                  </button>
+
+                  <button
+                    onClick={handlePasteSms}
+                    disabled={isPastingSms}
+                    className="px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-amber-500/20 shadow-xs shrink-0"
+                    title="Paste Copied Bank SMS Text or UPI Alert"
+                  >
+                    <Clipboard className="w-4 h-4" />
+                    <span className="hidden sm:inline">{isPastingSms ? 'Pasting...' : 'Paste SMS'}</span>
                   </button>
 
                   <button
