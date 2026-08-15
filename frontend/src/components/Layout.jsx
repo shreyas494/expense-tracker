@@ -3,11 +3,11 @@ import { styles } from '../assets/dummyStyles'
 import Navbar from './Navbar'
 import  Sidebar  from './Sidebar'
 import { useState } from 'react'
-import { Activity, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, IndianRupee, Gift, Home, Info, PieChart, PiggyBank, RefreshCcw, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap, Search } from 'lucide-react'
+import { Activity, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, IndianRupee, Gift, Home, Info, PieChart, PiggyBank, RefreshCcw, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap, Search, Camera } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import SmsPromptModal from './SmsPromptModal'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { scanReceiptWithOCR, compressImageForMobile } from '../utils/ocrParser'
 
 const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`
@@ -103,6 +103,10 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
     return () => clearInterval(interval);
   }, []);
 
+  const [isScanningShare, setIsScanningShare] = useState(false);
+  const [shareProgress, setShareProgress] = useState(0);
+  const [shareStatusText, setShareStatusText] = useState("Receiving shared PhonePe/GPay screenshot...");
+
   // Handle incoming Web Share Target parameters & SW cached share data (e.g. from GPay/PhonePe share sheet)
   useEffect(() => {
     const handleWebShareTarget = async () => {
@@ -149,9 +153,18 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
         const headers = { Authorization: `Bearer ${token}` };
 
         if (imageBlob) {
+          setIsScanningShare(true);
+          setShareProgress(15);
+          setShareStatusText("Receiving shared PhonePe/GPay screenshot...");
+
           try {
+            setShareProgress(40);
+            setShareStatusText("Compressing screenshot for AI scanner...");
             const compressedBase64 = await compressImageForMobile(imageBlob);
+
             if (compressedBase64) {
+              setShareProgress(70);
+              setShareStatusText("AI scanning PhonePe/GPay text & amount...");
               try {
                 const res = await axios.post(
                   `${API_BASE}/expense/scan-receipt`,
@@ -159,7 +172,14 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
                   { headers }
                 );
 
+                setShareProgress(90);
+                setShareStatusText("Parsing amount, merchant & reference details...");
+
                 if (res.data.success && res.data.data?.amount > 0) {
+                  setShareProgress(100);
+                  setShareStatusText("Scan complete! Loading summary...");
+                  await new Promise(r => setTimeout(r, 600));
+                  setIsScanningShare(false);
                   fetchPendingNotes();
                   return;
                 }
@@ -169,6 +189,8 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
             }
 
             // Fallback to client-side OCR if backend scan returns 0 or fails
+            setShareProgress(95);
+            setShareStatusText("Running AI vision OCR fallback...");
             try {
               const ocrResult = await scanReceiptWithOCR(imageBlob);
               if (ocrResult.amount > 0 || (ocrResult.description && ocrResult.description !== "Payment Transaction")) {
@@ -181,11 +203,15 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               }
             } catch (cErr) {
               console.error("Client OCR share fallback error:", cErr);
-            } finally {
-              fetchPendingNotes();
             }
           } catch (blobErr) {
             console.error("Image blob read error:", blobErr);
+          } finally {
+            setShareProgress(100);
+            setShareStatusText("Scan complete! Loading summary...");
+            await new Promise(r => setTimeout(r, 600));
+            setIsScanningShare(false);
+            fetchPendingNotes();
           }
         } else if (sharedTextContent || isSharePath) {
           const textToSubmit = sharedTextContent || "Shared Payment Receipt";
@@ -496,6 +522,64 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
               await fetchPendingNotes();
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Web Share Target Scanning Overlay for PhonePe/GPay Screenshots */}
+      <AnimatePresence>
+        {isScanningShare && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-xs sm:max-w-sm w-full shadow-2xl text-center space-y-5 relative overflow-hidden"
+            >
+              {/* Ambient Glow */}
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Animated Scanner Graphic */}
+              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-2xl bg-teal-500/20 animate-ping opacity-75" />
+                <div className="relative w-20 h-20 bg-teal-500/10 text-teal-500 border border-teal-500/30 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Camera className="w-9 h-9 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Header Text */}
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  Scanning Shared Screenshot...
+                </h3>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 min-h-[32px] flex items-center justify-center px-2">
+                  {shareStatusText}
+                </p>
+              </div>
+
+              {/* Progress Bar & Percentage */}
+              <div className="space-y-2 pt-1">
+                <div className="flex justify-between items-center text-xs font-extrabold">
+                  <span className="text-teal-600 dark:text-teal-400 uppercase tracking-wider text-[10px]">PhonePe / GPay OCR</span>
+                  <span className="text-slate-900 dark:text-white font-mono text-sm">{shareProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-slate-700">
+                  <motion.div
+                    className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-300 shadow-sm"
+                    style={{ width: `${shareProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 italic pt-1">
+                Extracting UPI reference, amount & merchant details...
+              </p>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
