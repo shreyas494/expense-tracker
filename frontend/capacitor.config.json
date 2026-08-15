@@ -1,0 +1,20 @@
+{
+  "appId": "com.trackexpense.app",
+  "appName": "TrackExpense",
+  "webDir": "dist",
+  "server": {
+    "url": "https://expense-tracker-two-pi-30.vercel.app",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f172a"
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
