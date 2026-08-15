@@ -60,10 +60,10 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
       setScanProgress(currentPct)
       setStatusText(`Scanning PhonePe screenshot ${i + 1} of ${files.length}...`)
 
+      let itemData = null
+
       try {
         const compressedBase64 = await compressImageForMobile(file)
-        let itemData = null
-
         if (compressedBase64) {
           try {
             const res = await axios.post(
@@ -72,11 +72,11 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
               { headers }
             )
 
-            if (res.data.success && res.data.data?.amount > 0) {
+            if (res.data && res.data.success && res.data.data) {
               itemData = {
-                id: `phonepe_${Date.now()}_${i}`,
+                id: `phonepe_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
                 selected: true,
-                description: res.data.data.description || `PhonePe Payment ${i + 1}`,
+                description: res.data.data.description || `PhonePe Transaction ${i + 1}`,
                 amount: res.data.data.amount || 0,
                 category: res.data.data.category || 'Food',
                 type: res.data.data.type || 'expense',
@@ -92,20 +92,32 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
         if (!itemData) {
           const ocrResult = await scanReceiptWithOCR(file)
           itemData = {
-            id: `phonepe_${Date.now()}_${i}`,
-            selected: ocrResult.amount > 0,
-            description: ocrResult.description || `PhonePe Payment ${i + 1}`,
+            id: `phonepe_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
+            selected: true,
+            description: ocrResult.description || `PhonePe Transaction ${i + 1}`,
             amount: ocrResult.amount || 0,
-            category: ocrResult.category || 'Other',
+            category: ocrResult.category || 'Food',
             type: ocrResult.type || 'expense',
             date: new Date().toISOString().split('T')[0],
             previewUrl: URL.createObjectURL(file)
           }
         }
-
-        results.push(itemData)
       } catch (fileErr) {
         console.error("Error parsing screenshot", i, fileErr)
+        itemData = {
+          id: `phonepe_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
+          selected: true,
+          description: `PhonePe Transaction ${i + 1}`,
+          amount: 0,
+          category: 'Food',
+          type: 'expense',
+          date: new Date().toISOString().split('T')[0],
+          previewUrl: URL.createObjectURL(file)
+        }
+      }
+
+      if (itemData) {
+        results.push(itemData)
       }
     }
 
