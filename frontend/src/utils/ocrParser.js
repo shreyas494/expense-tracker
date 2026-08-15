@@ -18,40 +18,47 @@ export function parseTransactionText(text) {
     type = "income";
   }
 
-  // 2. Extract Amount (Handles ₹1, ₹ 1, Rs 1, INR 1, and standalone numbers near Paid to / Debited from)
+  // 2. Extract Amount (Handles ₹, Rs, INR, and PhonePe multiline layouts)
   let amount = 0;
-  const amountMatches = text.match(/(?:rs\.?|inr|re\.?|₹|\$|€|£)\s*([\d,]+(?:\.\d{1,2})?)/gi);
-  if (amountMatches && amountMatches.length > 0) {
-    for (const m of amountMatches) {
-      const numStr = m.replace(/[^0-9\.]/g, '');
-      const parsedNum = parseFloat(numStr);
-      if (parsedNum > 0) {
-        amount = parsedNum;
-        break;
-      }
+  
+  // High confidence PhonePe amount regex
+  const phonePeAmountMatch = text.match(/(?:paid to|sent to|transfer to|debited|amount|total|successful|paid)\s*[\n\r\s:]*(?:₹|rs\.?|inr|\*|\?|S|T)?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                             text.match(/(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                             text.match(/\b([\d]{2,6}(?:\.\d{1,2})?)\b/);
+
+  if (phonePeAmountMatch && phonePeAmountMatch[1]) {
+    const cleanNum = parseFloat(phonePeAmountMatch[1].replace(/,/g, ''));
+    if (cleanNum > 0 && cleanNum < 1000000) {
+      amount = cleanNum;
     }
   }
 
   if (amount === 0) {
-    const standaloneMatch = text.match(/(?:₹|rs\.?|inr)\s*(\d+(?:\.\d{1,2})?)/i) || text.match(/(?:paid to|debited|total|amount)\b[\s\S]*?(\d+(?:\.\d{1,2})?)/i);
-    if (standaloneMatch && standaloneMatch[1]) {
-      amount = parseFloat(standaloneMatch[1]);
+    const amountMatches = text.match(/(?:rs\.?|inr|re\.?|₹|\$|€|£)\s*([\d,]+(?:\.\d{1,2})?)/gi);
+    if (amountMatches && amountMatches.length > 0) {
+      for (const m of amountMatches) {
+        const numStr = m.replace(/[^0-9\.]/g, '');
+        const parsedNum = parseFloat(numStr);
+        if (parsedNum > 0 && parsedNum < 1000000) {
+          amount = parsedNum;
+          break;
+        }
+      }
     }
   }
 
   // 3. Extract Merchant / Recipient Name
   let description = "";
   
-  // Handle PhonePe multiline layout: "Paid to\nUddesh Bhagyawant PICT"
-  const paidToNextLine = text.match(/(?:paid to|sent to|transfer to)\s*[\n\r]+\s*([^\n\r]+)/i);
-  if (paidToNextLine && paidToNextLine[1]) {
-    description = paidToNextLine[1].trim();
-  }
+  // PhonePe multiline payee: "Paid to\nSwiggy Private Limited"
+  const phonePePayeeMatch = text.match(/(?:paid to|transfer to|sent to|payment to)\s*[\n\r:]*\s*([a-zA-Z0-9\s.&'-]+)/i) ||
+                            text.match(/(?:paid to|sent to|transfer to)\s*[\n\r]+\s*([^\n\r]+)/i) ||
+                            text.match(/(?:to)\s+([a-zA-Z0-9\s.&'-]+?)(?:\s+on|\s+ref|\s+upi|\s+vpa|\.|\n|$)/i);
 
-  if (!description) {
-    const inlineRecipientMatch = text.match(/(?:paid to|sent to|paid|transfer to|to VPA|to merchant|vpa|info)\s+([a-zA-Z0-9\s\.\*\/&@_-]+?)(?:\s+on|\s+ref|\s+link|\s+via|\s+balance|\s+using|sent to|\.|\n|$)/i);
-    if (inlineRecipientMatch && inlineRecipientMatch[1]) {
-      description = inlineRecipientMatch[1].trim();
+  if (phonePePayeeMatch && phonePePayeeMatch[1]) {
+    const rawPayee = phonePePayeeMatch[1].trim();
+    if (rawPayee.length > 1 && !rawPayee.toLowerCase().includes("phonepe") && !rawPayee.toLowerCase().includes("successful")) {
+      description = rawPayee;
     }
   }
 
@@ -73,7 +80,7 @@ export function parseTransactionText(text) {
   }
 
   if (!description || description.length < 2 || description.toLowerCase().includes("explore the app") || description.toLowerCase().includes("download")) {
-    description = "Payment Transaction";
+    description = "PhonePe Payment";
   }
 
   description = description.charAt(0).toUpperCase() + description.slice(1);

@@ -242,12 +242,17 @@ function parseTransactionSMS(text) {
     }
   }
 
-  // 2. Regex to extract amount (looks for Rs, INR, Re, ₹ followed by number)
-  const amountRegex = /(?:rs\.?|inr|re\.?|₹)\s*([\d,]+(?:\.\d{1,2})?)/i;
-  const match = text.match(amountRegex);
+  // 2. Regex to extract amount (looks for Rs, INR, Re, ₹ or standalone number near paid/transfer/debited)
+  const phonePeAmountMatch = text.match(/(?:paid to|sent to|transfer to|debited|amount|total|successful|paid)\s*[\n\r\s:]*(?:₹|rs\.?|inr|\*|\?|S|T)?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                             text.match(/(?:rs\.?|inr|re\.?|₹)\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                             text.match(/\b([\d]{2,6}(?:\.\d{1,2})?)\b/);
+
   let amount = 0;
-  if (match && match[1]) {
-    amount = parseFloat(match[1].replace(/,/g, ""));
+  if (phonePeAmountMatch && phonePeAmountMatch[1]) {
+    const cleanNum = parseFloat(phonePeAmountMatch[1].replace(/,/g, ""));
+    if (cleanNum > 0 && cleanNum < 1000000) {
+      amount = cleanNum;
+    }
   }
 
   // 3. Extract Merchant / Recipient
