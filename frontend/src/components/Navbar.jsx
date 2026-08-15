@@ -222,7 +222,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
                   {/* PhonePe App Icon Button */}
                   <a
-                    href="intent://#Intent;package=com.phonepe.app;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end;"
+                    href="phonepe://home"
                     className="w-9 h-9 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-xs active:scale-95"
                     title="Open PhonePe App"
                   >
