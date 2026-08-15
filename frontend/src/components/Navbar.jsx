@@ -25,6 +25,23 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
+    const handleOpenPhonePe = (e) => {
+      if (e) e.stopPropagation();
+      try {
+        const a = document.createElement('a');
+        a.href = 'phonepe://';
+        a.rel = 'noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+        }, 500);
+      } catch (err) {
+        console.warn("Direct link launch failed, trying intent:", err);
+        window.location.href = "intent://#Intent;package=com.phonepe.app;scheme=phonepe;end;";
+      }
+    };
+
     const handlePasteSms = async () => {
       try {
         let clipboardText = '';
@@ -205,7 +222,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
                   {/* PhonePe App Icon Button */}
                   <button
-                    onClick={() => { window.location.href = "phonepe://" }}
+                    onClick={handleOpenPhonePe}
                     className="w-9 h-9 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-xs active:scale-95"
                     title="Open PhonePe App"
                   >
