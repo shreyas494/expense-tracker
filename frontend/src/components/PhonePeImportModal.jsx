@@ -123,8 +123,87 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
     }
   }
 
-  const toggleItemSelection = (id) => {
-    setParsedItems(prev => prev.map(item => item.id === id ? { ...item, selected: !item.selected } : item))
+  const [capturedFrames, setCapturedFrames] = useState([])
+  const [isCapturing, setIsCapturing] = useState(false)
+  const mediaStreamRef = useRef(null)
+
+  const startScreenCaptureOverlay = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert("Live Screen Capture API is not supported on this browser/version. Using RAM Clipboard instead.")
+        return
+      }
+
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'monitor' },
+        audio: false
+      })
+
+      mediaStreamRef.current = stream
+      setIsCapturing(true)
+      setCapturedFrames([])
+
+      // Launch PhonePe App
+      window.location.href = "phonepe://home"
+    } catch (err) {
+      console.warn("Screen capture permission denied:", err)
+      alert("Screen capture permission allowed you to snap screen in RAM without gallery storage.")
+    }
+  }
+
+  const snapScreenFrame = async () => {
+    if (!mediaStreamRef.current) return
+    const videoTrack = mediaStreamRef.current.getVideoTracks()[0]
+    if (!videoTrack) return
+
+    try {
+      if ('ImageCapture' in window) {
+        const imageCapture = new ImageCapture(videoTrack)
+        const bitmap = await imageCapture.grabFrame()
+        const canvas = document.createElement('canvas')
+        canvas.width = bitmap.width
+        canvas.height = bitmap.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(bitmap, 0, 0)
+        canvas.toBlob(blob => {
+          if (blob) {
+            const file = new File([blob], `snap_${Date.now()}.png`, { type: 'image/png' })
+            setCapturedFrames(prev => [...prev, file])
+          }
+        }, 'image/png')
+      } else {
+        // Fallback video element frame grabber
+        const video = document.createElement('video')
+        video.srcObject = mediaStreamRef.current
+        await video.play()
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth || 720
+        canvas.height = video.videoHeight || 1280
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(video, 0, 0)
+        canvas.toBlob(blob => {
+          if (blob) {
+            const file = new File([blob], `snap_${Date.now()}.png`, { type: 'image/png' })
+            setCapturedFrames(prev => [...prev, file])
+          }
+        }, 'image/png')
+      }
+    } catch (err) {
+      console.error("Frame snap failed:", err)
+    }
+  }
+
+  const stopCaptureAndProcess = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop())
+      mediaStreamRef.current = null
+    }
+    setIsCapturing(false)
+    if (capturedFrames.length > 0) {
+      processFiles(capturedFrames)
+    } else {
+      alert("No screen snapshots captured yet. Tap 'Snap Screen' while viewing PhonePe History!")
+    }
   }
 
   const updateItem = (id, field, value) => {
@@ -224,25 +303,36 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Step 1: Open PhonePe */}
+              {/* Step 1: Open PhonePe & Start Screen Capture */}
               <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3 text-left flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-black flex items-center justify-center shrink-0">1</span>
-                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Open PhonePe App</h4>
+                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Open PhonePe & Live Capture</h4>
                   </div>
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Open PhonePe $\rightarrow$ History tab $\rightarrow$ Take screenshots of your transactions.
+                    Open PhonePe $\rightarrow$ History tab $\rightarrow$ Snap screen without gallery clutter.
                   </p>
                 </div>
-                <a
-                  href="phonepe://home"
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer mt-3"
-                  title="Launch PhonePe App directly on your phone"
-                >
-                  <span>Open PhonePe App ↗</span>
-                </a>
+                <div className="space-y-2 mt-3">
+                  <a
+                    href="phonepe://home"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                    title="Launch PhonePe App directly on your phone"
+                  >
+                    <span>Open PhonePe App ↗</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={startScreenCaptureOverlay}
+                    className="w-full py-2 px-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-extrabold rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    title="Start Live Screen Snap Overlay without saving to gallery"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>🎥 Floating Screen Capture</span>
+                  </button>
+                </div>
               </div>
 
               {/* Step 2: Pick Multiple Screenshots */}
@@ -406,6 +496,33 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
           </div>
         )}
       </motion.div>
+
+      {/* Floating Control Bar Overlay when Screen Capture is active */}
+      {isCapturing && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-slate-900/95 backdrop-blur-md text-white border border-purple-500/40 rounded-full px-5 py-2.5 shadow-2xl flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+            <span className="text-xs font-extrabold tracking-wider uppercase text-purple-300">Live RAM Snapper ({capturedFrames.length})</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={snapScreenFrame}
+            className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-full text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Snap Screen</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={stopCaptureAndProcess}
+            className="px-3.5 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-full text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <span>Process All ({capturedFrames.length}) ➔</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
