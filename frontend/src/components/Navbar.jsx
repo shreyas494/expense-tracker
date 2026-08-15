@@ -28,11 +28,11 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
     useEffect(() => {
       const handleTrigger = () => {
-        setIsPhonePeModalOpen(true);
-        setTimeout(() => {
-          const fileInput = document.getElementById('phonepeFileInput');
-          if (fileInput) fileInput.click();
-        }, 300);
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        } else {
+          setIsPhonePeModalOpen(true);
+        }
       };
 
       const handleHashCheck = () => {
@@ -230,7 +230,25 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
 
   return (
     <header className={navbarStyles.header}>
-        <div className={navbarStyles.container}>
+      {/* Upload Progress Bar Banner */}
+      {isUploading && (
+        <div className="w-full bg-purple-500/10 border-b border-purple-500/20 px-4 py-2 flex items-center justify-between text-xs font-extrabold text-purple-700 dark:text-purple-300">
+          <div className="flex items-center gap-2">
+            <Camera className="w-4 h-4 text-purple-600 animate-bounce" />
+            <span>{scanStatusText}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-purple-600 dark:text-purple-400 font-black">{scanProgress}%</span>
+            <div className="w-28 bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-purple-500/30 p-0.5">
+              <div
+                className="bg-gradient-to-r from-purple-600 via-indigo-500 to-teal-400 h-full rounded-full transition-all duration-300"
+                style={{ width: `${scanProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      <div className={navbarStyles.container}>
             {/* logo */}
             <div onClick={() => navigate("/")} className={navbarStyles.logoContainer}>
                 <div className={navbarStyles.logoImage}>
