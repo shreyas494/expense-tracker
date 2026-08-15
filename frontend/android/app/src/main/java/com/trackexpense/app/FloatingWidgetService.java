@@ -87,9 +87,15 @@ public class FloatingWidgetService extends Service {
         // Inflate or create simple floating container view
         Button snapBtn = new Button(this);
         snapBtn.setText("📸 Snap PhonePe (0)");
-        snapBtn.setBackgroundColor(Color.parseColor("#9333ea"));
+        
+        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+        gd.setColor(Color.parseColor("#9333ea"));
+        gd.setCornerRadius(60f);
+        gd.setStroke(3, Color.parseColor("#c084fc"));
+        snapBtn.setBackground(gd);
         snapBtn.setTextColor(Color.WHITE);
-        snapBtn.setPadding(30, 20, 30, 20);
+        snapBtn.setPadding(40, 24, 40, 24);
+        snapBtn.setTextSize(13f);
 
         snapBtn.setOnClickListener(new View.OnClickListener() {
             @Override
