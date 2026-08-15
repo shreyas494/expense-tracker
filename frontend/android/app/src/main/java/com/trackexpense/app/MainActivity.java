@@ -13,7 +13,9 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
+            if (Settings.canDrawOverlays(this)) {
+                startFloatingService();
+            } else {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:" + getPackageName()));
@@ -22,6 +24,21 @@ public class MainActivity extends BridgeActivity {
                     e.printStackTrace();
                 }
             }
+        } else {
+            startFloatingService();
+        }
+    }
+
+    private void startFloatingService() {
+        try {
+            Intent intent = new Intent(this, FloatingWidgetService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
