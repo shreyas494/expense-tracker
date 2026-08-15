@@ -46,12 +46,14 @@ public class MainActivity extends BridgeActivity {
 
     private void handleBatchImportIntent(final Intent intent) {
         if (intent != null && intent.getBooleanExtra("open_batch_import", false)) {
+            final java.util.ArrayList<String> paths = intent.getStringArrayListExtra("snapped_paths");
+            final int count = paths != null ? paths.size() : 1;
             if (this.bridge != null && this.bridge.getWebView() != null) {
                 this.bridge.getWebView().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         bridge.getWebView().evaluateJavascript(
-                            "window.location.hash = 'phonepe-import-" + System.currentTimeMillis() + "'; window.dispatchEvent(new CustomEvent('phonepe_auto_trigger'));",
+                            "window.location.hash = 'phonepe-import-" + System.currentTimeMillis() + "'; window.dispatchEvent(new CustomEvent('phonepe_auto_trigger', { detail: { count: " + count + " } }));",
                             null
                         );
                     }

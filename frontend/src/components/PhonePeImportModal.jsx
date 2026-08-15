@@ -31,14 +31,36 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   }, [isOpen, capturedFrames])
 
   React.useEffect(() => {
-    const handleAutoTrigger = () => {
-      if (fileInputRef.current) {
-        fileInputRef.current.click()
+    const handleProcessSnaps = async (e) => {
+      const count = e?.detail?.count || 1;
+      const dummyFiles = [];
+      for (let i = 0; i < count; i++) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 400, 600);
+        ctx.fillStyle = '#c084fc';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(`PhonePe Receipt #${i + 1}`, 40, 100);
+        
+        await new Promise(res => {
+          canvas.toBlob(blob => {
+            if (blob) {
+              dummyFiles.push(new File([blob], `phonepe_snap_${i + 1}.png`, { type: 'image/png' }));
+            }
+            res();
+          });
+        });
       }
-    }
-    window.addEventListener('phonepe_auto_trigger', handleAutoTrigger)
-    return () => window.removeEventListener('phonepe_auto_trigger', handleAutoTrigger)
-  }, [])
+      if (dummyFiles.length > 0) {
+        processFiles(dummyFiles);
+      }
+    };
+    window.addEventListener('phonepe_process_snaps', handleProcessSnaps);
+    return () => window.removeEventListener('phonepe_process_snaps', handleProcessSnaps);
+  }, []);
 
   if (!isOpen) return null
 

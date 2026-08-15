@@ -153,13 +153,16 @@ public class FloatingWidgetService extends Service {
         capsuleLayout.addView(saveBtn);
         capsuleLayout.addView(closeBtn);
 
+        final java.util.ArrayList<String> snappedPaths = new java.util.ArrayList<>();
+
         // Snap Click Action
         snapBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 snapCount++;
+                snappedPaths.add("snap_" + snapCount);
                 snapBtn.setText("📸 Snap (" + snapCount + ")");
-                Toast.makeText(getApplicationContext(), "PhonePe Receipt Snapped into RAM!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "PhonePe Receipt #" + snapCount + " Snapped into RAM!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -175,6 +178,7 @@ public class FloatingWidgetService extends Service {
                 Intent openApp = new Intent(getApplicationContext(), MainActivity.class);
                 openApp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 openApp.putExtra("open_batch_import", true);
+                openApp.putStringArrayListExtra("snapped_paths", snappedPaths);
                 startActivity(openApp);
                 stopSelf();
             }

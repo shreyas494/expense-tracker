@@ -27,12 +27,12 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
     useEffect(() => {
-      const handleTrigger = () => {
-        if (fileInputRef.current) {
-          fileInputRef.current.click();
-        } else {
-          setIsPhonePeModalOpen(true);
-        }
+      const handleTrigger = (e) => {
+        setIsPhonePeModalOpen(true);
+        const count = e?.detail?.count || 1;
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('phonepe_process_snaps', { detail: { count } }));
+        }, 300);
       };
 
       const handleHashCheck = () => {
