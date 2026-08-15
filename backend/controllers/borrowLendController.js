@@ -202,12 +202,10 @@ export async function addRepayment(req, res) {
       });
     }
 
-    const payAmt = Number(amount);
+    let payAmt = Number(amount);
     if (payAmt > record.remainingAmount) {
-      return res.status(400).json({
-        success: false,
-        message: `Repayment amount (₹${payAmt}) cannot exceed outstanding amount (₹${record.remainingAmount})`,
-      });
+      // Cap repayment amount to remaining balance so final settlement completes cleanly
+      payAmt = record.remainingAmount;
     }
 
     record.payments.push({

@@ -250,7 +250,7 @@ const SmsPromptModal = ({ transaction, onClose, onSaved }) => {
             return
           }
           await axios.post(
-            `${API_BASE}/borrow-lend/repay/${selectedRecordId}`,
+            `${API_BASE}/borrow-lend/repayment/${selectedRecordId}`,
             {
               amount: totalAmt,
               notes: note.trim() || description.trim() || 'Repayment via scanned receipt/alert',
