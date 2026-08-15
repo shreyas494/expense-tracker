@@ -26,6 +26,20 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
 
+    useEffect(() => {
+      const handleHashChange = () => {
+        if (window.location.hash === '#phonepe-import') {
+          setIsPhonePeModalOpen(true);
+          window.location.hash = '';
+        }
+      };
+      window.addEventListener('hashchange', handleHashChange);
+      if (window.location.hash === '#phonepe-import') {
+        handleHashChange();
+      }
+      return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
     const handleOpenPhonePe = (e) => {
       if (e) e.stopPropagation();
       try {

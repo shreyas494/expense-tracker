@@ -33,12 +33,31 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         checkAndStartService();
+        handleBatchImportIntent(getIntent());
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
         checkAndStartService();
+        handleBatchImportIntent(intent);
+    }
+
+    private void handleBatchImportIntent(Intent intent) {
+        if (intent != null && intent.getBooleanExtra("open_batch_import", false)) {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                this.bridge.getWebView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        bridge.getWebView().evaluateJavascript(
+                            "window.location.hash = 'phonepe-import'; window.dispatchEvent(new Event('hashchange'));",
+                            null
+                        );
+                    }
+                });
+            }
+        }
     }
 
     private void checkAndStartService() {
