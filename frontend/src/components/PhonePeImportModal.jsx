@@ -126,20 +126,26 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const [capturedFrames, setCapturedFrames] = useState([])
   const [isCapturing, setIsCapturing] = useState(false)
   const mediaStreamRef = useRef(null)
+  const videoRef = useRef(null)
 
   const startScreenCaptureOverlay = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        alert("Live Screen Capture API is not supported on this browser/version. Using RAM Clipboard instead.")
+        alert("Live Screen Capture API is not supported on this browser version.")
         return
       }
 
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: 'monitor' },
+        video: true,
         audio: false
       })
 
       mediaStreamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play().catch(e => console.warn("Video play error:", e))
+      }
+
       setIsCapturing(true)
       setCapturedFrames([])
 
@@ -147,46 +153,45 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
       window.location.href = "phonepe://home"
     } catch (err) {
       console.warn("Screen capture permission denied:", err)
-      alert("Screen capture permission allowed you to snap screen in RAM without gallery storage.")
     }
   }
 
   const snapScreenFrame = async () => {
-    if (!mediaStreamRef.current) return
-    const videoTrack = mediaStreamRef.current.getVideoTracks()[0]
-    if (!videoTrack) return
-
     try {
-      if ('ImageCapture' in window) {
-        const imageCapture = new ImageCapture(videoTrack)
-        const bitmap = await imageCapture.grabFrame()
+      const video = videoRef.current
+      if (video && video.videoWidth > 0) {
         const canvas = document.createElement('canvas')
-        canvas.width = bitmap.width
-        canvas.height = bitmap.height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(bitmap, 0, 0)
-        canvas.toBlob(blob => {
-          if (blob) {
-            const file = new File([blob], `snap_${Date.now()}.png`, { type: 'image/png' })
-            setCapturedFrames(prev => [...prev, file])
-          }
-        }, 'image/png')
-      } else {
-        // Fallback video element frame grabber
-        const video = document.createElement('video')
-        video.srcObject = mediaStreamRef.current
-        await video.play()
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth || 720
-        canvas.height = video.videoHeight || 1280
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
         const ctx = canvas.getContext('2d')
         ctx.drawImage(video, 0, 0)
+
         canvas.toBlob(blob => {
           if (blob) {
             const file = new File([blob], `snap_${Date.now()}.png`, { type: 'image/png' })
             setCapturedFrames(prev => [...prev, file])
           }
         }, 'image/png')
+        return
+      }
+
+      if (mediaStreamRef.current) {
+        const videoTrack = mediaStreamRef.current.getVideoTracks()[0]
+        if (videoTrack && 'ImageCapture' in window) {
+          const imageCapture = new ImageCapture(videoTrack)
+          const bitmap = await imageCapture.grabFrame()
+          const canvas = document.createElement('canvas')
+          canvas.width = bitmap.width
+          canvas.height = bitmap.height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(bitmap, 0, 0)
+          canvas.toBlob(blob => {
+            if (blob) {
+              const file = new File([blob], `snap_${Date.now()}.png`, { type: 'image/png' })
+              setCapturedFrames(prev => [...prev, file])
+            }
+          }, 'image/png')
+        }
       }
     } catch (err) {
       console.error("Frame snap failed:", err)
@@ -301,6 +306,7 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
               onChange={handleFileSelect}
               className="hidden"
             />
+            <video ref={videoRef} autoPlay playsInline muted className="hidden" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Step 1: Open PhonePe & Custom Floating Screenshot Tool */}
