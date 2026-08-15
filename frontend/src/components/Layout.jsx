@@ -414,6 +414,7 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
 
   const outletContext = {
     transactions: filteredTransactions,
+    allTransactions: transactions,
     addTransaction,
     editTransaction,
     deleteTransaction,

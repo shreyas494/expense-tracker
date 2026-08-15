@@ -5,7 +5,7 @@ import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Percent, Calend
 import axios from 'axios'
 
 const Dashboard = () => {
-  const { transactions, timeFrame, setTimeFrame, onLogout } = useOutletContext()
+  const { transactions, allTransactions, timeFrame, setTimeFrame, onLogout } = useOutletContext()
   const [hoveredBar, setHoveredBar] = useState(null)
   const [borrowLendOverview, setBorrowLendOverview] = useState({ totalBorrowed: 0, totalLent: 0 })
 
@@ -28,27 +28,35 @@ const Dashboard = () => {
     fetchBorrowLendOverview()
   }, [])
 
-  // 1. Calculate stats for the selected time frame
+  // 1. Calculate stats: All-Time Total Balance + Period-Specific Metrics
   const metrics = useMemo(() => {
-    let income = 0
-    let expenses = 0
-    
-    transactions.forEach(t => {
+    let allIncome = 0
+    let allExpenses = 0
+    ;(allTransactions || transactions).forEach(t => {
       const amt = Number(t.amount || 0)
-      if (t.type === 'income') income += amt
-      else expenses += amt
+      if (t.type === 'income') allIncome += amt
+      else allExpenses += amt
     })
 
-    const totalBalance = income - expenses
-    const savingsRate = income > 0 ? Math.max(0, Math.round((totalBalance / income) * 100)) : 0
+    let periodIncome = 0
+    let periodExpenses = 0
+    transactions.forEach(t => {
+      const amt = Number(t.amount || 0)
+      if (t.type === 'income') periodIncome += amt
+      else periodExpenses += amt
+    })
+
+    const totalBalance = allIncome - allExpenses
+    const periodSavings = periodIncome - periodExpenses
+    const savingsRate = periodIncome > 0 ? Math.max(0, Math.round((periodSavings / periodIncome) * 100)) : 0
 
     return {
       totalBalance,
-      income,
-      expenses,
+      income: periodIncome,
+      expenses: periodExpenses,
       savingsRate
     }
-  }, [transactions])
+  }, [transactions, allTransactions])
 
   // 2. Prepare chart data by grouping transactions by day/date
   const chartData = useMemo(() => {
