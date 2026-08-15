@@ -24,6 +24,12 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const [isCapturing, setIsCapturing] = useState(false)
   const [pipWindow, setPipWindow] = useState(null)
 
+  React.useEffect(() => {
+    if (isOpen && capturedFrames && capturedFrames.length > 0) {
+      processFiles(capturedFrames)
+    }
+  }, [isOpen, capturedFrames])
+
   if (!isOpen) return null
 
   const processFiles = async (files) => {
