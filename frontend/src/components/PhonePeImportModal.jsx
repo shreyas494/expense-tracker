@@ -388,15 +388,14 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
                   </p>
                 </div>
                 <div className="space-y-2 mt-3">
-                  <button
-                    type="button"
-                    onClick={openFloatingPiPDialog}
-                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                    title="Launch PhonePe with Floating In-App Screenshot Dialog"
+                  <a
+                    href="phonepe://home"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-center"
+                    title="Launch PhonePe App directly on your phone"
                   >
-                    <Camera className="w-4 h-4" />
-                    <span>Open PhonePe with Floating Dialog ↗</span>
-                  </button>
+                    <span>Open PhonePe App ↗</span>
+                  </a>
                 </div>
               </div>
 
