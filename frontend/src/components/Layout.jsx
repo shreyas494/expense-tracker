@@ -113,6 +113,15 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
       try {
         const isSharePath = window.location.pathname.includes('share-target');
         const urlParams = new URLSearchParams(window.location.search);
+
+        // Check if launching via ?action=new shortcut
+        if (urlParams.get('action') === 'new' || urlParams.get('new') === 'true') {
+          if (window.location.pathname !== '/expense') {
+            navigate('/expense?action=new');
+          }
+          return;
+        }
+
         let sharedTextContent = [
           urlParams.get('title') || '',
           urlParams.get('text') || '',
@@ -121,9 +130,9 @@ const Layout = ({onLogout, user, onUserUpdate}) =>{
 
         let imageBlob = null;
 
-        // Clear query params & share-target path from URL bar
-        if (window.location.search || isSharePath) {
-          window.history.replaceState({}, document.title, '/');
+        // Clear query params & share-target path from URL bar if share target params
+        if (isSharePath || urlParams.get('title') || urlParams.get('text') || urlParams.get('url')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         // Check Service Worker cache for shared text or image
