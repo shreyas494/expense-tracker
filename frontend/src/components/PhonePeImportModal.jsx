@@ -98,16 +98,12 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
         }
       }
 
-      if (!itemData || itemData.amount === 0) {
-        const sampleAmounts = [450, 320, 1250, 850, 290];
-        const sampleMerchants = ["PhonePe Swiggy", "PhonePe Zomato", "PhonePe DMart", "PhonePe Fuel", "PhonePe Uber"];
-        const sampleIdx = i % sampleAmounts.length;
-
+      if (!itemData) {
         itemData = {
           id: `phonepe_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
           selected: true,
-          description: (itemData && itemData.description && itemData.description !== "PhonePe Payment" && itemData.description !== "PhonePe Transaction") ? itemData.description : sampleMerchants[sampleIdx],
-          amount: (itemData && itemData.amount > 0) ? itemData.amount : sampleAmounts[sampleIdx],
+          description: `PhonePe Transaction ${i + 1}`,
+          amount: 0,
           category: 'Food',
           type: 'expense',
           date: new Date().toISOString().split('T')[0],
@@ -134,44 +130,9 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
 
   React.useEffect(() => {
     const handleProcessSnaps = async (e) => {
-      setIsScanning(true);
-      setScanProgress(10);
-      setStatusText("Reading snapped receipts from RAM...");
-      
-      const count = e?.detail?.count || 1;
-      const dummyFiles = [];
-      const sampleAmounts = [450, 320, 1250, 850, 290];
-      const sampleMerchants = ["Paid to Swiggy", "Paid to Zomato", "Paid to DMart", "Paid to Shell Fuel", "Paid to Uber"];
-
-      for (let i = 0; i < count; i++) {
-        const sampleIdx = i % sampleAmounts.length;
-        const canvas = document.createElement('canvas');
-        canvas.width = 450;
-        canvas.height = 650;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, 450, 650);
-        ctx.fillStyle = '#c084fc';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(sampleMerchants[sampleIdx], 40, 100);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 32px sans-serif';
-        ctx.fillText(`₹ ${sampleAmounts[sampleIdx]}.00`, 40, 180);
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '16px sans-serif';
-        ctx.fillText("Transaction Successful", 40, 240);
-        
-        await new Promise(res => {
-          canvas.toBlob(blob => {
-            if (blob) {
-              dummyFiles.push(new File([blob], `phonepe_snap_${i + 1}.png`, { type: 'image/png' }));
-            }
-            res();
-          });
-        });
-      }
-      if (dummyFiles.length > 0) {
-        processFiles(dummyFiles);
+      // Auto trigger file picker to select real PhonePe screenshots
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
       }
     };
     window.addEventListener('phonepe_process_snaps', handleProcessSnaps);
