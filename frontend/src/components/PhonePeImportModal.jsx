@@ -206,26 +206,14 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  try {
-                    const a = document.createElement('a');
-                    a.href = 'phonepe://';
-                    a.rel = 'noreferrer';
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); }, 500);
-                  } catch (err) {
-                    window.location.href = "intent://#Intent;package=com.phonepe.app;scheme=phonepe;end;";
-                  }
-                }}
+              <a
+                href="intent://pay#Intent;scheme=upi;package=com.phonepe.app;end;"
+                onClick={(e) => e.stopPropagation()}
                 className="px-4 py-2 text-xs font-extrabold rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Launch PhonePe App directly on your phone"
               >
                 Open PhonePe App ↗
-              </button>
+              </a>
               <button className="px-4 py-2 text-xs font-extrabold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md">
                 Browse Gallery / Files
               </button>
