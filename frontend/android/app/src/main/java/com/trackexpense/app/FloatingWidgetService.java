@@ -82,32 +82,103 @@ public class FloatingWidgetService extends Service {
 
         params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
         params.x = 0;
-        params.y = 100;
+        params.y = 150;
 
-        // Inflate or create simple floating container view
-        Button snapBtn = new Button(this);
-        snapBtn.setText("📸 Snap PhonePe (0)");
-        
-        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
-        gd.setColor(Color.parseColor("#9333ea"));
-        gd.setCornerRadius(60f);
-        gd.setStroke(3, Color.parseColor("#c084fc"));
-        snapBtn.setBackground(gd);
+        // Create horizontal linear layout container for glassmorphic capsule
+        android.widget.LinearLayout capsuleLayout = new android.widget.LinearLayout(this);
+        capsuleLayout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        capsuleLayout.setGravity(Gravity.CENTER_VERTICAL);
+        capsuleLayout.setPadding(20, 14, 20, 14);
+
+        // Glassmorphic background
+        android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
+        containerBg.setColor(Color.parseColor("#f00f172a")); // Dark slate translucent
+        containerBg.setCornerRadius(80f);
+        containerBg.setStroke(4, Color.parseColor("#9333ea")); // Neon purple border
+        capsuleLayout.setBackground(containerBg);
+
+        // 1. Snap Button (Purple Pill)
+        final Button snapBtn = new Button(this);
+        snapBtn.setText("📸 Snap (0)");
         snapBtn.setTextColor(Color.WHITE);
-        snapBtn.setPadding(40, 24, 40, 24);
-        snapBtn.setTextSize(13f);
+        snapBtn.setTextSize(12f);
+        android.graphics.drawable.GradientDrawable snapBg = new android.graphics.drawable.GradientDrawable();
+        snapBg.setColor(Color.parseColor("#9333ea"));
+        snapBg.setCornerRadius(50f);
+        snapBtn.setBackground(snapBg);
+        snapBtn.setPadding(26, 14, 26, 14);
 
+        // 2. Save & Process Button (Teal Pill)
+        final Button saveBtn = new Button(this);
+        saveBtn.setText("⚡ Save & Import");
+        saveBtn.setTextColor(Color.WHITE);
+        saveBtn.setTextSize(12f);
+        android.graphics.drawable.GradientDrawable saveBg = new android.graphics.drawable.GradientDrawable();
+        saveBg.setColor(Color.parseColor("#0d9488"));
+        saveBg.setCornerRadius(50f);
+        saveBtn.setBackground(saveBg);
+        saveBtn.setPadding(26, 14, 26, 14);
+        android.widget.LinearLayout.LayoutParams saveParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        saveParams.setMargins(14, 0, 14, 0);
+        saveBtn.setLayoutParams(saveParams);
+
+        // 3. Close Button (Red Circle)
+        final Button closeBtn = new Button(this);
+        closeBtn.setText("✖");
+        closeBtn.setTextColor(Color.WHITE);
+        closeBtn.setTextSize(14f);
+        android.graphics.drawable.GradientDrawable closeBg = new android.graphics.drawable.GradientDrawable();
+        closeBg.setColor(Color.parseColor("#ef4444"));
+        closeBg.setCornerRadius(50f);
+        closeBtn.setBackground(closeBg);
+        closeBtn.setPadding(18, 10, 18, 10);
+
+        // Add views to container
+        capsuleLayout.addView(snapBtn);
+        capsuleLayout.addView(saveBtn);
+        capsuleLayout.addView(closeBtn);
+
+        // Snap Click Action
         snapBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 snapCount++;
-                snapBtn.setText("📸 Snap PhonePe (" + snapCount + ")");
+                snapBtn.setText("📸 Snap (" + snapCount + ")");
                 Toast.makeText(getApplicationContext(), "PhonePe Receipt Snapped into RAM!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Touch to drag bubble anywhere on screen
-        snapBtn.setOnTouchListener(new View.OnTouchListener() {
+        // Save & Import Click Action
+        saveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (snapCount == 0) {
+                    Toast.makeText(getApplicationContext(), "Snap a PhonePe receipt first!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(getApplicationContext(), "Processing " + snapCount + " transactions...", Toast.LENGTH_LONG).show();
+                Intent openApp = new Intent(getApplicationContext(), MainActivity.class);
+                openApp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                openApp.putExtra("open_batch_import", true);
+                startActivity(openApp);
+                stopSelf();
+            }
+        });
+
+        // Close Click Action
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Floating Snapper closed.", Toast.LENGTH_SHORT).show();
+                stopSelf();
+            }
+        });
+
+        // Touch to drag capsule anywhere on screen
+        capsuleLayout.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
             private float initialTouchX, initialTouchY;
 
@@ -123,14 +194,14 @@ public class FloatingWidgetService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         params.x = initialX + (int) (event.getRawX() - initialTouchX);
                         params.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        windowManager.updateViewLayout(snapBtn, params);
+                        windowManager.updateViewLayout(capsuleLayout, params);
                         return true;
                 }
                 return false;
             }
         });
 
-        floatingView = snapBtn;
+        floatingView = capsuleLayout;
         try {
             windowManager.addView(floatingView, params);
         } catch (Exception e) {
