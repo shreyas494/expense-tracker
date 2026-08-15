@@ -20,8 +20,7 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
 
   if (!isOpen) return null
 
-  const handleFileSelect = async (e) => {
-    const files = Array.from(e.target.files || [])
+  const processFiles = async (files) => {
     if (!files.length) return
 
     setSelectedFiles(files)
@@ -83,13 +82,45 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
         }
 
         results.push(itemData)
-      } catch (err) {
-        console.error("Failed to parse file", file.name, err)
+      } catch (fileErr) {
+        console.error("Error parsing screenshot", i, fileErr)
       }
     }
 
     setParsedItems(results)
     setIsScanning(false)
+  }
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || [])
+    processFiles(files)
+  }
+
+  const handlePasteFromRAM = async () => {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.read) {
+        alert("Clipboard RAM reading is not supported on this browser version.")
+        return
+      }
+      const items = await navigator.clipboard.read()
+      const ramFiles = []
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type)
+            ramFiles.push(new File([blob], `ram_screenshot_${Date.now()}.png`, { type }))
+          }
+        }
+      }
+      if (ramFiles.length > 0) {
+        processFiles(ramFiles)
+      } else {
+        alert("No screenshot image found in RAM memory/clipboard. Copy or take a screenshot first!")
+      }
+    } catch (err) {
+      console.warn("RAM clipboard read error:", err)
+      alert("Please allow clipboard permission to read RAM screenshots!")
+    }
   }
 
   const toggleItemSelection = (id) => {
@@ -225,14 +256,24 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
                     Long-press in your phone gallery to select 2, 5, or 10 screenshots at once.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer mt-3"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Select Screenshots & Scan</span>
-                </button>
+                <div className="space-y-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Select Screenshots & Scan</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePasteFromRAM}
+                    className="w-full py-2 px-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 font-bold rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    title="Read screenshot image directly from RAM clipboard without storing in gallery"
+                  >
+                    <span>📋 Paste Screenshot from RAM</span>
+                  </button>
+                </div>
               </div>
             </div>
 
