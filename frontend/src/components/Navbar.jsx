@@ -205,11 +205,11 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-2.5 sm:px-3.5 py-2 text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
+                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-extrabold rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer flex items-center gap-1.5 border border-teal-500/20 shadow-xs shrink-0"
                     title="Scan Receipt Photo or PhonePe Screenshot"
                   >
-                    <Camera className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isUploading ? 'Scanning...' : 'Scan / PhonePe'}</span>
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="inline font-extrabold">{isUploading ? 'Scanning...' : 'Scan / PhonePe'}</span>
                   </button>
 
                   <button
