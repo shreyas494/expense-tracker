@@ -309,35 +309,37 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
             <video ref={videoRef} autoPlay playsInline muted className="hidden" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Step 1: Open PhonePe & Custom Floating Screenshot Tool */}
+              {/* Step 1: Open PhonePe App */}
               <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3 text-left flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-black flex items-center justify-center shrink-0">1</span>
-                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Open PhonePe & Snap Tool</h4>
+                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Open PhonePe App</h4>
                   </div>
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Launch PhonePe with custom floating screen snapper tool.
+                    Open PhonePe $\rightarrow$ History tab $\rightarrow$ Take screenshots of your transactions.
                   </p>
                 </div>
                 <div className="space-y-2 mt-3">
                   <a
                     href="phonepe://home"
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full py-2 px-3 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                     title="Launch PhonePe App directly on your phone"
                   >
                     <span>Open PhonePe App ↗</span>
                   </a>
-                  <button
-                    type="button"
-                    onClick={startScreenCaptureOverlay}
-                    className="w-full py-2 px-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-extrabold rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                    title="Launch custom floating screen snapper widget"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>📸 Start Floating Screenshot Tool</span>
-                  </button>
+                  {typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function' && (
+                    <button
+                      type="button"
+                      onClick={startScreenCaptureOverlay}
+                      className="w-full py-2 px-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-extrabold rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      title="Launch floating screen snapper widget on desktop"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>📸 Floating Screen Snapper</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
