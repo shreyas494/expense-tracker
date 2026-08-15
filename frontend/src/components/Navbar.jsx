@@ -306,6 +306,19 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                                 <Layers className=" w-4 h-4 text-indigo-500"/>
                                 <span>Batch Import PhonePe</span>
                             </button>
+
+                            <button onClick={() => {
+                                setMenuOpen(false);
+                                if (window.eruda) {
+                                  window.eruda.init();
+                                  localStorage.setItem('debug_console', 'true');
+                                } else {
+                                  window.location.href = window.location.pathname + '?debug=true';
+                                }
+                            }} className={navbarStyles.menuItem}>
+                                <span className="text-xs">🐛</span>
+                                <span>Mobile Debug Console</span>
+                            </button>
                         </div>
                         <div className={navbarStyles.menuItemBorder}>
                           <button onClick={handleLogout} className={navbarStyles.logoutButton}>

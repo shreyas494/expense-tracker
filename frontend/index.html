@@ -11,7 +11,11 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
+      if (window.location.search.includes('debug=true') || localStorage.getItem('debug_console') === 'true') {
+        eruda.init();
+      }
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
