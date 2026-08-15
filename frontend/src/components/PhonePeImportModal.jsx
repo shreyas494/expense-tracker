@@ -180,12 +180,9 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
           </button>
         </div>
 
-        {/* Upload Dropzone */}
+        {/* Guided 2-Step Assistant Box */}
         {parsedItems.length === 0 && !isScanning && (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-indigo-500/30 hover:border-indigo-500/60 dark:border-indigo-500/20 dark:hover:border-indigo-500/50 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-3xl p-8 text-center cursor-pointer transition-all space-y-3"
-          >
+          <div className="space-y-4">
             <input
               type="file"
               ref={fileInputRef}
@@ -194,29 +191,58 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
               onChange={handleFileSelect}
               className="hidden"
             />
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shadow-inner">
-              <Upload className="w-8 h-8" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Step 1: Open PhonePe */}
+              <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3 text-left flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-black flex items-center justify-center shrink-0">1</span>
+                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Open PhonePe App</h4>
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Open PhonePe $\rightarrow$ History tab $\rightarrow$ Take screenshots of your transactions.
+                  </p>
+                </div>
+                <a
+                  href="phonepe://home"
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer mt-3"
+                  title="Launch PhonePe App directly on your phone"
+                >
+                  <span>Open PhonePe App ↗</span>
+                </a>
+              </div>
+
+              {/* Step 2: Pick Multiple Screenshots */}
+              <div className="p-5 rounded-2xl bg-teal-500/10 border border-teal-500/20 space-y-3 text-left flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs font-black flex items-center justify-center shrink-0">2</span>
+                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">Select Screenshots</h4>
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Long-press in your phone gallery to select 2, 5, or 10 screenshots at once.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer mt-3"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Select Screenshots & Scan</span>
+                </button>
+              </div>
             </div>
-            <div>
-              <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                Tap or Drag & Drop Multiple PhonePe Screenshots
-              </h4>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                Select 2, 5, or 10 receipt photos at once from your gallery
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-2xl p-4 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/30"
+            >
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                📁 Or drag & drop multiple screenshot image files anywhere here to process
               </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-              <a
-                href="phonepe://home"
-                onClick={(e) => e.stopPropagation()}
-                className="px-4 py-2 text-xs font-extrabold rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
-                title="Launch PhonePe App directly on your phone"
-              >
-                Open PhonePe App ↗
-              </a>
-              <button className="px-4 py-2 text-xs font-extrabold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md">
-                Browse Gallery / Files
-              </button>
             </div>
           </div>
         )}
