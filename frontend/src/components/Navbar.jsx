@@ -189,7 +189,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
                 <div className={navbarStyles.logoImage}>
                     <img src={img1} alt="Expense Tracker Logo" className={navbarStyles.logo}/>
                 </div>
-                <span className={navbarStyles.logoText}>Expense Tracker</span>
+                <span className="hidden sm:inline text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">Expense Tracker</span>
             </div>
 
             {/* if the user is present */}

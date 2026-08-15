@@ -223,10 +223,10 @@ const ExpensePage = () => {
           </select>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 w-full md:w-auto">
           <button
             onClick={() => setIsPhonePeModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-xs"
+            className="col-span-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-xs"
             title="Batch Import Multiple PhonePe / UPI Screenshots"
           >
             <Layers className="w-4 h-4" />
@@ -234,14 +234,14 @@ const ExpensePage = () => {
           </button>
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
+            className="col-span-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export Excel
           </button>
           <button
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-xs shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer"
+            className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-xs shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Expense
