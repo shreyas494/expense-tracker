@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react'
-import { useOutletContext, useLocation } from 'react-router-dom'
+import React, { useState, useMemo } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Plus, Edit2, Trash2, Download, X, IndianRupee, Calendar, Tag, FileText, Search, DollarSign } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
@@ -9,7 +9,6 @@ const EXPENSE_CATEGORIES = ['Food', 'Housing', 'Transport', 'Shopping', 'Enterta
 
 const ExpensePage = () => {
   const { transactions, addTransaction, editTransaction, deleteTransaction, refreshTransactions } = useOutletContext()
-  const location = useLocation()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
@@ -58,15 +57,6 @@ const ExpensePage = () => {
     setError("")
     setIsModalOpen(true)
   }
-
-  // Auto-open modal if URL contains ?action=new or ?new=true (e.g. from Home Screen shortcut)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    if (params.get('action') === 'new' || params.get('new') === 'true') {
-      openAddModal()
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-  }, [location.search])
 
   const openEditModal = (t) => {
     setEditingTransaction(t)

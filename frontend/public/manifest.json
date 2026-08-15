@@ -29,21 +29,5 @@
         }
       ]
     }
-  },
-  "shortcuts": [
-    {
-      "name": "Add New Expense",
-      "short_name": "New Expense",
-      "description": "Log a new expense entry immediately",
-      "url": "/expense?action=new",
-      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
-    },
-    {
-      "name": "Borrow & Lend",
-      "short_name": "Borrow/Lend",
-      "description": "View and manage debts and receivables",
-      "url": "/borrow-lend",
-      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
-    }
-  ]
+  }
 }
