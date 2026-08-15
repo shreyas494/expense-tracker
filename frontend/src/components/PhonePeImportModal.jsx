@@ -207,7 +207,7 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
               <a
-                href="intent://pay#Intent;scheme=upi;package=com.phonepe.app;end;"
+                href="intent://#Intent;package=com.phonepe.app;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end;"
                 onClick={(e) => e.stopPropagation()}
                 className="px-4 py-2 text-xs font-extrabold rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Launch PhonePe App directly on your phone"
