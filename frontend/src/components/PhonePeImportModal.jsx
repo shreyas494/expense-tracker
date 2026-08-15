@@ -205,9 +205,22 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
                 Select 2, 5, or 10 receipt photos at once from your gallery
               </p>
             </div>
-            <button className="px-4 py-2 text-xs font-extrabold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md">
-              Browse Gallery / Files
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.location.href = "phonepe://"
+                }}
+                className="px-4 py-2 text-xs font-extrabold rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Launch PhonePe App directly on your phone"
+              >
+                Open PhonePe App ↗
+              </button>
+              <button className="px-4 py-2 text-xs font-extrabold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md">
+                Browse Gallery / Files
+              </button>
+            </div>
           </div>
         )}
 
