@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.content.pm.ServiceInfo;
 import androidx.core.app.NotificationCompat;
 
 public class FloatingWidgetService extends Service {
@@ -54,7 +55,11 @@ public class FloatingWidgetService extends Service {
                     .setSmallIcon(android.R.drawable.ic_menu_camera)
                     .build();
 
-            startForeground(1001, notification);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(1001, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(1001, notification);
+            }
         }
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
