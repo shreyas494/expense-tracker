@@ -22,6 +22,7 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
   const [isImporting, setIsImporting] = useState(false)
   const [capturedFrames, setCapturedFrames] = useState([])
   const [isCapturing, setIsCapturing] = useState(false)
+  const [pipWindow, setPipWindow] = useState(null)
 
   if (!isOpen) return null
 
@@ -127,8 +128,6 @@ const PhonePeImportModal = ({ isOpen, onClose, onImportComplete }) => {
       alert("Please allow clipboard permission to read RAM screenshots!")
     }
   }
-
-  const [pipWindow, setPipWindow] = useState(null)
 
   const openFloatingPiPDialog = async () => {
     try {

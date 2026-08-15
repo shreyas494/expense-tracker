@@ -21,6 +21,7 @@ const Navbar = ({user: propUser, onLogout, theme, toggleTheme}) => {
     const fileInputRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isPastingSms, setIsPastingSms] = useState(false);
     const [isPhonePeModalOpen, setIsPhonePeModalOpen] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [scanStatusText, setScanStatusText] = useState("Reading receipt image file...");
