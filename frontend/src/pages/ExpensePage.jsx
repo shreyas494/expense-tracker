@@ -34,12 +34,29 @@ const ExpensePage = () => {
     setIsModalOpen(true)
   }
 
-  // Auto-open modal if URL contains ?action=new or ?new=true (e.g. from Fingerprint Quick Launch / Home Screen shortcut)
+  // Auto-open modal if URL contains ?action=new or ?new=true (even when resuming from minimized background state)
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    if (params.get('action') === 'new' || params.get('new') === 'true') {
-      openAddModal()
-      window.history.replaceState({}, document.title, window.location.pathname)
+    const checkAndOpenModal = () => {
+      const params = new URLSearchParams(window.location.search || location.search)
+      if (params.get('action') === 'new' || params.get('new') === 'true') {
+        openAddModal()
+      }
+    }
+
+    checkAndOpenModal()
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndOpenModal()
+      }
+    }
+
+    window.addEventListener('focus', checkAndOpenModal)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', checkAndOpenModal)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [location.search])
 
