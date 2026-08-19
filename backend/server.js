@@ -37,8 +37,16 @@ app.use("/api/challenges",challengeRouter);
 app.use("/api/reports",reportRouter);
 
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
     res.send('API working')
+})
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Expense Tracker API Active', timestamp: new Date() })
+})
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Expense Tracker API Active', timestamp: new Date() })
 })
 
 app.listen(port,()=>{
